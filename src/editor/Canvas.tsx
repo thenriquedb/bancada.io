@@ -11,6 +11,8 @@ import {
 import { screenToWorld, rectFromPoints } from './geometry/coordinates.ts'
 import { snapPoint } from './snapping/snapping.ts'
 import { getElementBounds } from './geometry/bounds.ts'
+import { getLHandles, hitTestLHandle, applyLResize } from './geometry/lshapeHandles.ts'
+import type { LHandle } from './geometry/lshapeHandles.ts'
 import { Grid } from './rendering/Grid.tsx'
 import { SelectionOverlay } from './rendering/SelectionOverlay.tsx'
 import { CountertopRenderer } from './rendering/CountertopRenderer.tsx'
@@ -26,8 +28,11 @@ import type { Point, ProjectElement, CountertopElement } from '../models/types.t
 
 const MIN_ZOOM = 0.04
 const MAX_ZOOM = 12
+const MIN_DIM  = 100   // minimum mm size when resizing
 
-// ─── Drag state ───────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | LHandle
 
 type DragState =
   | { type: 'none' }
@@ -37,7 +42,6 @@ type DragState =
       type: 'moving'
       elementIds: string[]
       startWorld: Point
-      currentWorld: Point
       originalPositions: Map<string, Point>
     }
   | {
@@ -45,11 +49,11 @@ type DragState =
       elementId: string
       handle: ResizeHandle
       startWorld: Point
-      currentWorld: Point
+      /** Bounding-box at drag start – used for standard elements */
       originalBounds: { x: number; y: number; width: number; height: number }
+      /** L-shape geometry at drag start – used for l-shape countertops */
+      originalLGeo?: { px: number; py: number; aW: number; aD: number; bW: number; bD: number }
     }
-
-type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
 // ─── Hit testing ──────────────────────────────────────────────────────────────
 
@@ -59,33 +63,119 @@ function hitTest(el: ProjectElement, pt: Point): boolean {
   return pt.x >= b.x && pt.x <= b.x + b.width && pt.y >= b.y && pt.y <= b.y + b.height
 }
 
-function getResizeHandle(
+/** Returns handle name if screenPt is near one, else null. */
+function getResizeHandleAtScreen(
   el: ProjectElement,
   screenPt: Point,
   zoom: number,
   panX: number,
-  panY: number
+  panY: number,
 ): ResizeHandle | null {
+  // L-shape countertop: use polygon-edge handles
+  if (el.type === 'countertop' && (el as CountertopElement).geometry.type === 'l-shape') {
+    const g = (el as CountertopElement).geometry
+    if (g.type !== 'l-shape') return null
+    const { segmentA: sA, segmentB: sB } = g
+    const handles = getLHandles(
+      el.position.x, el.position.y,
+      sA.width, sA.depth, sB.width, sB.depth,
+      zoom, panX, panY
+    )
+    return hitTestLHandle(handles, screenPt)
+  }
+
+  // Standard bounding-box handles for other resizable types
+  const resizable = el.type === 'countertop' || el.type === 'sink' ||
+    el.type === 'cooktop' || el.type === 'wet-area' || el.type === 'backsplash'
+  if (!resizable) return null
+
   const b = getElementBounds(el)
   if (!b) return null
-  const hs = 7 // handle size in px
-  const handles: Array<{ name: ResizeHandle; sx: number; sy: number }> = [
-    { name: 'nw', sx: b.x * zoom + panX,                    sy: b.y * zoom + panY },
-    { name: 'n',  sx: (b.x + b.width / 2) * zoom + panX,    sy: b.y * zoom + panY },
-    { name: 'ne', sx: (b.x + b.width) * zoom + panX,         sy: b.y * zoom + panY },
-    { name: 'e',  sx: (b.x + b.width) * zoom + panX,         sy: (b.y + b.height / 2) * zoom + panY },
-    { name: 'se', sx: (b.x + b.width) * zoom + panX,         sy: (b.y + b.height) * zoom + panY },
-    { name: 's',  sx: (b.x + b.width / 2) * zoom + panX,    sy: (b.y + b.height) * zoom + panY },
-    { name: 'sw', sx: b.x * zoom + panX,                    sy: (b.y + b.height) * zoom + panY },
-    { name: 'w',  sx: b.x * zoom + panX,                    sy: (b.y + b.height / 2) * zoom + panY },
+
+  const sx = b.x * zoom + panX
+  const sy = b.y * zoom + panY
+  const sw = b.width  * zoom
+  const sh = b.height * zoom
+
+  const CORNER_HIT = 10
+  const EDGE_HIT   = 8
+
+  const handles: Array<{ name: ResizeHandle; sx: number; sy: number; hit: number }> = [
+    { name: 'nw', sx,        sy,        hit: CORNER_HIT },
+    { name: 'ne', sx: sx+sw, sy,        hit: CORNER_HIT },
+    { name: 'se', sx: sx+sw, sy: sy+sh, hit: CORNER_HIT },
+    { name: 'sw', sx,        sy: sy+sh, hit: CORNER_HIT },
+    { name: 'n',  sx: sx+sw/2, sy,        hit: EDGE_HIT },
+    { name: 's',  sx: sx+sw/2, sy: sy+sh, hit: EDGE_HIT },
+    { name: 'e',  sx: sx+sw,   sy: sy+sh/2, hit: EDGE_HIT },
+    { name: 'w',  sx,          sy: sy+sh/2, hit: EDGE_HIT },
   ]
+
   for (const h of handles) {
-    if (
-      Math.abs(screenPt.x - h.sx) <= hs + 2 &&
-      Math.abs(screenPt.y - h.sy) <= hs + 2
-    ) return h.name
+    const dx = Math.abs(screenPt.x - h.sx)
+    const dy = Math.abs(screenPt.y - h.sy)
+    if (dx <= h.hit && dy <= h.hit) return h.name
   }
   return null
+}
+
+function applyResize(
+  el: ProjectElement,
+  handle: ResizeHandle,
+  ob: { x: number; y: number; width: number; height: number },
+  dx: number,
+  dy: number,
+  store: ReturnType<typeof useEditorStore>,
+  originalLGeo?: { px: number; py: number; aW: number; aD: number; bW: number; bD: number },
+) {
+  // ── L-shape: use ORIGINAL geometry captured at drag start ────────────────
+  if (el.type === 'countertop' && (el as CountertopElement).geometry.type === 'l-shape') {
+    if (!originalLGeo) return  // safety guard
+    const result = applyLResize(handle as LHandle, originalLGeo, dx, dy, MIN_DIM)
+    store.updateElement(el.id, {
+      position: { x: result.px, y: result.py },
+      geometry: {
+        type: 'l-shape',
+        segmentA: { width: result.aW, depth: result.aD },
+        segmentB: { width: result.bW, depth: result.bD },
+      },
+    } as Partial<CountertopElement>)
+    return
+  }
+
+  // ── Standard bounding-box resize ──────────────────────────────────────
+  let nx = ob.x, ny = ob.y, nw = ob.width, nh = ob.height
+
+  if (handle.includes('e'))  nw = Math.max(MIN_DIM, ob.width  + dx)
+  if (handle.includes('s'))  nh = Math.max(MIN_DIM, ob.height + dy)
+  if (handle.includes('w')) { nx = ob.x + dx; nw = Math.max(MIN_DIM, ob.width  - dx) }
+  if (handle.includes('n')) { ny = ob.y + dy; nh = Math.max(MIN_DIM, ob.height - dy) }
+
+  nx = Math.round(nx); ny = Math.round(ny)
+  nw = Math.round(nw); nh = Math.round(nh)
+
+  switch (el.type) {
+    case 'countertop':
+      if ((el as CountertopElement).geometry.type === 'reta') {
+        store.updateElement(el.id, {
+          position: { x: nx, y: ny },
+          geometry: { type: 'reta', width: nw, depth: nh },
+        } as Partial<CountertopElement>)
+      }
+      break
+    case 'sink':
+      store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
+      break
+    case 'cooktop':
+      store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
+      break
+    case 'wet-area':
+      store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
+      break
+    case 'backsplash':
+      store.updateElement(el.id, { position: { x: nx, y: ny }, length: nw, height: nh })
+      break
+  }
 }
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
@@ -94,6 +184,7 @@ export const Canvas: React.FC = () => {
   const svgRef  = useRef<SVGSVGElement>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [drag, setDrag] = useState<DragState>({ type: 'none' })
+  const [hoveredHandle, setHoveredHandle] = useState<string | null>(null)
 
   const viewport    = useEditorStore(selectViewport)
   const activeTool  = useEditorStore(selectActiveTool)
@@ -103,7 +194,7 @@ export const Canvas: React.FC = () => {
   const hoveredId   = useEditorStore(selectHoveredId)
   const store       = useEditorStore()
 
-  // ── Resize observer ────────────────────────────────────────────────────────
+  // ── Resize observer ──────────────────────────────────────────────────────
   useEffect(() => {
     const el = svgRef.current
     if (!el) return
@@ -115,7 +206,7 @@ export const Canvas: React.FC = () => {
     return () => ro.disconnect()
   }, [])
 
-  // ── Wheel zoom ─────────────────────────────────────────────────────────────
+  // ── Wheel zoom ───────────────────────────────────────────────────────────
   const handleWheel = useCallback(
     (e: React.WheelEvent<SVGSVGElement>) => {
       e.preventDefault()
@@ -129,14 +220,14 @@ export const Canvas: React.FC = () => {
     [viewport.zoom, store]
   )
 
-  // ── SVG-relative mouse position ────────────────────────────────────────────
+  // ── SVG-relative mouse position ──────────────────────────────────────────
   const getSvgPt = useCallback((e: React.MouseEvent): Point => {
     const r = svgRef.current?.getBoundingClientRect()
     if (!r) return { x: 0, y: 0 }
     return { x: e.clientX - r.left, y: e.clientY - r.top }
   }, [])
 
-  // ── Mouse down ─────────────────────────────────────────────────────────────
+  // ── Mouse down ───────────────────────────────────────────────────────────
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
       if (e.button !== 0 && e.button !== 1) return
@@ -150,28 +241,43 @@ export const Canvas: React.FC = () => {
         return
       }
 
-      // Select tool
       if (activeTool === 'select') {
-        // Check resize handles on selected elements first
+        // ── Check resize handles on selected elements first ───────────────
         for (const id of selectedIds) {
           const el = elements.find((el) => el.id === id)
           if (!el) continue
-          const handle = getResizeHandle(el, screen, viewport.zoom, viewport.panX, viewport.panY)
+          const handle = getResizeHandleAtScreen(el, screen, viewport.zoom, viewport.panX, viewport.panY)
           if (handle) {
             const b = getElementBounds(el)!
+            // Capture original L-shape geometry at drag start
+            let originalLGeo: { px: number; py: number; aW: number; aD: number; bW: number; bD: number } | undefined
+            if (el.type === 'countertop' && (el as CountertopElement).geometry.type === 'l-shape') {
+              const g = (el as CountertopElement).geometry
+              if (g.type === 'l-shape') {
+                originalLGeo = {
+                  px: el.position.x,
+                  py: el.position.y,
+                  aW: g.segmentA.width,
+                  aD: g.segmentA.depth,
+                  bW: g.segmentB.width,
+                  bD: g.segmentB.depth,
+                }
+              }
+            }
+            store.pushHistory()
             setDrag({
               type: 'resizing',
               elementId: id,
               handle,
               startWorld: world,
-              currentWorld: world,
               originalBounds: { x: b.x, y: b.y, width: b.width, height: b.height },
+              originalLGeo,
             })
             return
           }
         }
 
-        // Hit test elements (top-most first)
+        // ── Hit test elements ──────────────────────────────────────────────
         const hit = [...elements].reverse().find((el) => hitTest(el, world))
 
         if (hit) {
@@ -193,11 +299,10 @@ export const Canvas: React.FC = () => {
             : alreadySelected ? selectedIds : [hit.id]
 
           const origPos = new Map<string, Point>()
-          // Include the moved elements
+          // Include moved elements + their children
           elements.forEach((el: ProjectElement) => {
             if (idsToMove.includes(el.id)) origPos.set(el.id, { ...el.position })
           })
-          // Also include children of any countertop being moved
           elements.forEach((el: ProjectElement) => {
             if (
               'parentId' in el &&
@@ -208,7 +313,7 @@ export const Canvas: React.FC = () => {
             }
           })
 
-          setDrag({ type: 'moving', elementIds: idsToMove, startWorld: world, currentWorld: world, originalPositions: origPos })
+          setDrag({ type: 'moving', elementIds: idsToMove, startWorld: world, originalPositions: origPos })
         } else {
           if (!e.shiftKey) store.clearSelection()
           const snapped = snapPoint(world, { gridSize: settings.gridSpacing, snapToGrid: settings.snapToGrid })
@@ -219,7 +324,7 @@ export const Canvas: React.FC = () => {
     [activeTool, elements, getSvgPt, selectedIds, settings, store, viewport]
   )
 
-  // ── Mouse move ─────────────────────────────────────────────────────────────
+  // ── Mouse move ───────────────────────────────────────────────────────────
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
       const screen = getSvgPt(e)
@@ -238,10 +343,8 @@ export const Canvas: React.FC = () => {
       }
 
       if (drag.type === 'moving') {
-        setDrag({ ...drag, currentWorld: snapped })
         const dx = snapped.x - drag.startWorld.x
         const dy = snapped.y - drag.startWorld.y
-        // originalPositions includes both selected and their children
         drag.originalPositions.forEach((orig, id) => {
           store.updateElement(id, { position: { x: orig.x + dx, y: orig.y + dy } })
         })
@@ -249,41 +352,23 @@ export const Canvas: React.FC = () => {
       }
 
       if (drag.type === 'resizing') {
-        setDrag({ ...drag, currentWorld: snapped })
-        const { originalBounds: ob, handle, elementId } = drag
-        let nx = ob.x, ny = ob.y, nw = ob.width, nh = ob.height
-
         const dx = snapped.x - drag.startWorld.x
         const dy = snapped.y - drag.startWorld.y
-
-        if (handle.includes('e')) nw = Math.max(50, ob.width + dx)
-        if (handle.includes('s')) nh = Math.max(50, ob.height + dy)
-        if (handle.includes('w')) { nx = ob.x + dx; nw = Math.max(50, ob.width - dx) }
-        if (handle.includes('n')) { ny = ob.y + dy; nh = Math.max(50, ob.height - dy) }
-
-        const el = elements.find((el) => el.id === elementId)
-        if (el && el.type === 'countertop') {
-          if (el.geometry.type === 'reta') {
-            store.updateElement(elementId, {
-              position: { x: nx, y: ny },
-              geometry: { type: 'reta', width: Math.round(nw), depth: Math.round(nh) },
-            } as Partial<CountertopElement>)
-          }
-        } else if (el) {
-          // For other element types, just move position
-          store.updateElement(elementId, { position: { x: nx, y: ny } })
-        }
+        const el = elements.find((el) => el.id === drag.elementId)
+        if (el) applyResize(el, drag.handle, drag.originalBounds, dx, dy, store, drag.originalLGeo)
         return
       }
 
-      // Hover detection
-      const hit = [...elements].reverse().find((el: ProjectElement) => hitTest(el, world))
-      store.setHoveredId(hit?.id ?? null)
+      // ── Hover: check handle first, then element ────────────────────────
+      if (!hoveredHandle) {
+        const hit = [...elements].reverse().find((el: ProjectElement) => hitTest(el, world))
+        store.setHoveredId(hit?.id ?? null)
+      }
     },
-    [drag, elements, getSvgPt, settings, store, viewport]
+    [drag, elements, getSvgPt, hoveredHandle, settings, store, viewport]
   )
 
-  // ── Mouse up ───────────────────────────────────────────────────────────────
+  // ── Mouse up ─────────────────────────────────────────────────────────────
   const handleMouseUp = useCallback(
     (_e: React.MouseEvent<SVGSVGElement>) => {
       if (drag.type === 'selecting') {
@@ -293,7 +378,7 @@ export const Canvas: React.FC = () => {
             const b = getElementBounds(el)
             if (!b) return false
             return b.x >= sel.x && b.y >= sel.y &&
-              b.x + b.width <= sel.x + sel.width &&
+              b.x + b.width  <= sel.x + sel.width &&
               b.y + b.height <= sel.y + sel.height
           })
           store.setSelectedIds(hits.map((el: ProjectElement) => el.id))
@@ -311,20 +396,32 @@ export const Canvas: React.FC = () => {
     if (drag.type === 'panning') setDrag({ type: 'none' })
   }, [store, drag])
 
-  // ── Cursor ─────────────────────────────────────────────────────────────────
+  // ── Cursor ───────────────────────────────────────────────────────────────
   let cursor = 'default'
-  if (activeTool === 'pan') cursor = drag.type === 'panning' ? 'grabbing' : 'grab'
-  else if (drag.type === 'panning') cursor = 'grabbing'
-  else if (drag.type === 'moving') cursor = 'move'
-  else if (drag.type === 'resizing') {
+  if (activeTool === 'pan') {
+    cursor = drag.type === 'panning' ? 'grabbing' : 'grab'
+  } else if (drag.type === 'panning') {
+    cursor = 'grabbing'
+  } else if (drag.type === 'moving') {
+    cursor = 'move'
+  } else if (drag.type === 'resizing') {
     const cursors: Record<ResizeHandle, string> = {
       nw: 'nw-resize', n: 'n-resize', ne: 'ne-resize', e: 'e-resize',
       se: 'se-resize', s: 's-resize', sw: 'sw-resize', w: 'w-resize',
     }
-    cursor = cursors[drag.type === 'resizing' ? drag.handle : 'se']
-  } else if (hoveredId) cursor = 'move'
+    cursor = cursors[drag.handle]
+  } else if (hoveredHandle) {
+    const h = hoveredHandle.split(':')[1] as ResizeHandle | undefined
+    const cursors: Record<ResizeHandle, string> = {
+      nw: 'nw-resize', n: 'n-resize', ne: 'ne-resize', e: 'e-resize',
+      se: 'se-resize', s: 's-resize', sw: 'sw-resize', w: 'w-resize',
+    }
+    cursor = h ? (cursors[h] ?? 'default') : 'default'
+  } else if (hoveredId) {
+    cursor = 'move'
+  }
 
-  // ── Rubber-band rect ───────────────────────────────────────────────────────
+  // ── Rubber-band selection rect ───────────────────────────────────────────
   let selectionRect: React.ReactNode = null
   if (drag.type === 'selecting') {
     const r = rectFromPoints(drag.startWorld, drag.currentWorld)
@@ -343,7 +440,7 @@ export const Canvas: React.FC = () => {
     )
   }
 
-  // ── Auto-dimensions ────────────────────────────────────────────────────────
+  // ── Auto-dimensions ──────────────────────────────────────────────────────
   const unit = settings.unit
   const autoDimensions = useMemo(() => {
     if (!settings.showDimensions) return []
@@ -354,7 +451,7 @@ export const Canvas: React.FC = () => {
     })
   }, [elements, settings.showDimensions, unit])
 
-  // ── Room bounds ────────────────────────────────────────────────────────────
+  // ── Room bounds ──────────────────────────────────────────────────────────
   const roomBounds = settings.roomBounds
   const showRoom = roomBounds?.show && roomBounds.width > 0 && roomBounds.height > 0
 
@@ -408,13 +505,19 @@ export const Canvas: React.FC = () => {
         )}
       </g>
 
-      {/* Selection overlay (screen-space handles) */}
+      {/* Selection overlay with resize handles (screen-space) */}
       <SelectionOverlay
         elements={elements}
         selectedIds={selectedIds}
         zoom={viewport.zoom}
         panX={viewport.panX}
         panY={viewport.panY}
+        hoveredHandle={hoveredHandle}
+        onHandleEnter={(key) => {
+          setHoveredHandle(key)
+          store.setHoveredId(null)
+        }}
+        onHandleLeave={() => setHoveredHandle(null)}
       />
 
       {/* Rubber-band selection */}
@@ -456,9 +559,9 @@ const RoomBoundsRenderer: React.FC<{ width: number; height: number; zoom: number
 // ─── Per-element dispatcher ───────────────────────────────────────────────────
 
 type ElementRendererProps = {
-  element: ProjectElement
+  element:  ProjectElement
   selected: boolean
-  hovered: boolean
+  hovered:  boolean
 }
 
 const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, hovered }) => {
