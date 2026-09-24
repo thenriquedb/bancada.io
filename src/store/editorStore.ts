@@ -8,6 +8,7 @@ import type {
 } from '../models/types.ts'
 import { generateId, nowISO } from '../utils/helpers.ts'
 import { DEFAULT_MATERIAL } from '../models/materials.ts'
+import { getElementBounds, isInsideBounds } from '../editor/geometry/bounds.ts'
 
 // ─── Viewport ────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ type EditorState = {
   selectedIds: string[]
   hoveredId: string | null
   openDialog: EditorDialog | null
+  pendingDelete: { idsToDelete: Set<string>; additionalCount: number } | null
   clipboard: ProjectElement[]
   past: HistoryEntry[]
   future: HistoryEntry[]
@@ -68,6 +70,8 @@ type EditorActions = {
   updateElements: (updates: { id: string; patch: Partial<ProjectElement> }[]) => void
   removeElement: (id: string) => void
   removeElements: (ids: string[]) => void
+  confirmDelete: () => void
+  cancelDelete: () => void
   duplicateElements: (ids: string[]) => void
 
   // Selection
@@ -153,11 +157,11 @@ export const useEditorStore = create<EditorStore>()(
     newProject: (name) => {
       const p = createDefaultProject()
       if (name) p.name = name
-      set({ project: p, selectedIds: [], past: [], future: [], isDirty: false })
+      set({ project: p, selectedIds: [], past: [], future: [], isDirty: false, pendingDelete: null })
     },
 
     loadProject: (project) => {
-      set({ project, selectedIds: [], past: [], future: [], isDirty: false })
+      set({ project, selectedIds: [], past: [], future: [], isDirty: false, pendingDelete: null })
     },
 
     updateProjectMeta: (meta) =>
@@ -212,23 +216,67 @@ export const useEditorStore = create<EditorStore>()(
       }),
 
     removeElement: (id) => {
+      get().removeElements([id])
+    },
+
+    removeElements: (ids) => {
+      const { elements } = get().project
+      const idsToDelete = new Set(ids)
+      let added = true
+
+      while (added) {
+        added = false
+        elements.forEach((el) => {
+          if (idsToDelete.has(el.id)) return
+          if (!('parentId' in el)) return
+
+          let pId = (el as any).parentId
+          if (el.type !== 'countertop' && el.type !== 'wet-area' && el.type !== 'backsplash') {
+            const containingWetAreas = elements.filter(p => p.type === 'wet-area' && (() => {
+              const cb = getElementBounds(el)
+              const pb = getElementBounds(p)
+              return cb && pb && isInsideBounds(cb, pb)
+            })())
+            if (containingWetAreas.length > 0) {
+              pId = containingWetAreas[0].id
+            }
+          }
+
+          if (idsToDelete.has(pId)) {
+            idsToDelete.add(el.id)
+            added = true
+          }
+        })
+      }
+
+      const additionalCount = idsToDelete.size - ids.length
+      if (additionalCount > 0) {
+        set({ pendingDelete: { idsToDelete, additionalCount } })
+        return
+      }
+
       get().pushHistory()
       set((s) => ({
-        project: { ...s.project, elements: s.project.elements.filter((el) => el.id !== id), updatedAt: nowISO() },
-        selectedIds: s.selectedIds.filter((sid) => sid !== id),
+        project: { ...s.project, elements: s.project.elements.filter((el) => !idsToDelete.has(el.id)), updatedAt: nowISO() },
+        selectedIds: s.selectedIds.filter((sid) => !idsToDelete.has(sid)),
         isDirty: true,
       }))
     },
 
-    removeElements: (ids) => {
+    confirmDelete: () => {
+      const { pendingDelete } = get()
+      if (!pendingDelete) return
+      const { idsToDelete } = pendingDelete
       get().pushHistory()
-      const idSet = new Set(ids)
       set((s) => ({
-        project: { ...s.project, elements: s.project.elements.filter((el) => !idSet.has(el.id)), updatedAt: nowISO() },
-        selectedIds: s.selectedIds.filter((sid) => !idSet.has(sid)),
+        project: { ...s.project, elements: s.project.elements.filter((el) => !idsToDelete.has(el.id)), updatedAt: nowISO() },
+        selectedIds: s.selectedIds.filter((sid) => !idsToDelete.has(sid)),
         isDirty: true,
+        pendingDelete: null,
       }))
     },
+
+    cancelDelete: () => set({ pendingDelete: null }),
 
     duplicateElements: (ids) => {
       get().pushHistory()

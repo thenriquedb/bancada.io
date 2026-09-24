@@ -15,6 +15,7 @@ import { NewFaucetDialog } from '../components/dialogs/NewFaucetDialog.tsx'
 import { NewTrashDialog } from '../components/dialogs/NewTrashDialog.tsx'
 import { NewWetAreaDialog } from '../components/dialogs/NewWetAreaDialog.tsx'
 import { NewBacksplashDialog } from '../components/dialogs/NewBacksplashDialog.tsx'
+import { ConfirmDeleteDialog } from '../components/dialogs/ConfirmDeleteDialog.tsx'
 import { validateElements } from './geometry/validation.ts'
 import { exportProjectPDF } from '../pdf/generator.ts'
 import type { Project } from '../models/types.ts'
@@ -135,6 +136,8 @@ export const Editor: React.FC = () => {
       {openDialog === 'new-trash'      && <NewTrashDialog />}
       {openDialog === 'new-wet-area'   && <NewWetAreaDialog />}
       {openDialog === 'new-backsplash' && <NewBacksplashDialog />}
+      
+      <ConfirmDeleteDialog />
     </div>
   )
 }

@@ -164,19 +164,7 @@ export const LayersPanel: React.FC = () => {
   }
 
   const handleDelete = (id: string) => {
-    // Collect all descendants to delete
-    const idsToDelete = new Set<string>([id])
-    let added = true
-    while (added) {
-      added = false
-      elements.forEach(el => {
-        if ('parentId' in el && el.parentId && idsToDelete.has(el.parentId) && !idsToDelete.has(el.id)) {
-          idsToDelete.add(el.id)
-          added = true
-        }
-      })
-    }
-    store.removeElements(Array.from(idsToDelete))
+    store.removeElement(id)
   }
 
   // ── Render Tree ───────────────────────────────────────────────────────────
