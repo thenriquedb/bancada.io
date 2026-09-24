@@ -59,6 +59,7 @@ export type BaseElement = {
   dimParent?: boolean
   dimRoot?: boolean
   label?: string
+  rotation?: number // in degrees
 }
 
 export type CountertopElement = BaseElement & {

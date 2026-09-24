@@ -155,21 +155,33 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
               </div>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, opacity: 0.5, pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Rotação</span>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
                   <span style={{ padding: '6px 8px', color: 'var(--text-3)', display: 'flex', borderRight: '1px solid var(--border)' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 21H3v-5c0-4.4 3.6-8 8-8h9"/><path d="M17 4l4 4-4 4"/></svg>
                   </span>
-                  <input type="text" value="0°" readOnly
+                  <input type="number" step={1} value={element.rotation || 0}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value)
+                      if (isNaN(v)) return
+                      store.pushHistory()
+                      store.updateElement(element.id, { rotation: v % 360 })
+                    }}
                     style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
                 </div>
                 <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                  <button className="align-btn" type="button" style={{ padding: '6px 8px' }}>
+                  <button className="align-btn" type="button" style={{ padding: '6px 8px' }} onClick={() => {
+                    store.pushHistory()
+                    store.updateElement(element.id, { rotation: ((element.rotation || 0) - 90) % 360 })
+                  }} title="Girar -90°">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18"/><path d="M12 3v18"/><path d="M16 8l-4-4-4 4"/></svg>
                   </button>
-                  <button className="align-btn" type="button" style={{ padding: '6px 8px', borderLeft: '1px solid var(--border)' }}>
+                  <button className="align-btn" type="button" style={{ padding: '6px 8px', borderLeft: '1px solid var(--border)' }} onClick={() => {
+                    store.pushHistory()
+                    store.updateElement(element.id, { rotation: ((element.rotation || 0) + 90) % 360 })
+                  }} title="Girar +90°">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12H3"/><path d="M16 16l-4 4-4-4"/></svg>
                   </button>
                 </div>

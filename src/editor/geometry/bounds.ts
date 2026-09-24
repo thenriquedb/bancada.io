@@ -4,7 +4,7 @@ import type { ProjectElement, Rect } from '../../models/types.ts'
  * Return the bounding rect (in mm) of any element.
  * Returns null for elements without a fixed bounding box (e.g. annotations).
  */
-export function getElementBounds(el: ProjectElement): Rect | null {
+export function getUnrotatedBounds(el: ProjectElement): Rect | null {
   switch (el.type) {
     case 'countertop': {
       const g = el.geometry
@@ -45,6 +45,34 @@ export function getElementBounds(el: ProjectElement): Rect | null {
     default:
       return null
   }
+}
+
+export function getElementBounds(el: ProjectElement): Rect | null {
+  const rect = getUnrotatedBounds(el);
+  if (!rect || !el.rotation) return rect;
+
+  const rad = (el.rotation * Math.PI) / 180;
+  const cx = rect.x + rect.width / 2;
+  const cy = rect.y + rect.height / 2;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  const corners = [
+    { x: rect.x, y: rect.y },
+    { x: rect.x + rect.width, y: rect.y },
+    { x: rect.x, y: rect.y + rect.height },
+    { x: rect.x + rect.width, y: rect.y + rect.height },
+  ].map(p => ({
+    x: cos * (p.x - cx) - sin * (p.y - cy) + cx,
+    y: sin * (p.x - cx) + cos * (p.y - cy) + cy,
+  }));
+
+  const minX = Math.min(...corners.map(p => p.x));
+  const maxX = Math.max(...corners.map(p => p.x));
+  const minY = Math.min(...corners.map(p => p.y));
+  const maxY = Math.max(...corners.map(p => p.y));
+
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
 /**

@@ -20,7 +20,10 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
   if (shape === 'circular') {
     const r = (element.diameter ?? 250) / 2
     return (
-      <g className="element element--trash">
+      <g 
+        className="element element--trash"
+        transform={element.rotation ? `rotate(${element.rotation} ${pos.x} ${pos.y})` : undefined}
+      >
         <defs>
           <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={selected ? '#dbeafe' : '#f0f0f0'} />
@@ -63,7 +66,10 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
   const cy = pos.y + d / 2
 
   return (
-    <g className="element element--trash">
+    <g 
+      className="element element--trash"
+      transform={element.rotation ? `rotate(${element.rotation} ${cx} ${cy})` : undefined}
+    >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={selected ? '#dbeafe' : '#f0f0f0'} />

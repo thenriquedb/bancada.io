@@ -30,7 +30,10 @@ export const SinkRenderer: React.FC<SinkRendererProps> = ({ element, selected, h
   const bowlGradId = `sink-bowl-${element.id}`
 
   return (
-    <g className="element element--sink">
+    <g 
+      className="element element--sink"
+      transform={element.rotation ? `rotate(${element.rotation} ${cx} ${cy})` : undefined}
+    >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={selected ? '#dbeafe' : '#e2e2e2'} />

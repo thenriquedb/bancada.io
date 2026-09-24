@@ -18,7 +18,10 @@ export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selecte
   const shadowId = `faucet-shadow-${element.id}`
 
   return (
-    <g className="element element--faucet">
+    <g 
+      className="element element--faucet"
+      transform={element.rotation ? `rotate(${element.rotation} ${pos.x} ${pos.y})` : undefined}
+    >
       <defs>
         <radialGradient id={gradId} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor={selected ? '#dbeafe' : '#ffffff'} />

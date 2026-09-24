@@ -25,9 +25,14 @@ export const CooktopRenderer: React.FC<CooktopRendererProps> = ({ element, selec
   const cornerR = Math.min(width, depth) * 0.05
   const gradId = `cooktop-grad-${element.id}`
   const burnerGradId = `cooktop-burner-${element.id}`
+  const cx = pos.x + width / 2
+  const cy = pos.y + depth / 2
 
   return (
-    <g className="element element--cooktop">
+    <g 
+      className="element element--cooktop"
+      transform={element.rotation ? `rotate(${element.rotation} ${cx} ${cy})` : undefined}
+    >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={selected ? '#3b82f6' : '#2a2a2a'} />
