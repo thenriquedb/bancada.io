@@ -120,7 +120,7 @@ function createDefaultProject(): Project {
       { id: 'layer-anotacoes',name: 'Anotações', visible: true, locked: false, elementIds: [] },
     ],
     settings: {
-      unit: 'mm',
+      unit: 'cm',
       showGrid: true,
       snapToGrid: true,
       gridSpacing: 100,

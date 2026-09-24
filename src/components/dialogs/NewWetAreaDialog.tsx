@@ -2,20 +2,23 @@ import React, { useState } from 'react'
 import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
+import { useDialogUnit } from '../../utils/useDialogUnit.ts'
 import type { WetAreaElement } from '../../models/types.ts'
 import { getCountertops, getDefaultParent } from '../../utils/elementHelpers.ts'
 
 export const NewWetAreaDialog: React.FC = () => {
   const store = useEditorStore()
+  const { unit, toMm, fromMm } = useDialogUnit()
   const countertops = getCountertops(store.project.elements)
   const defaultCt = getDefaultParent(countertops, store.selectedIds)
+  const step = unit === 'm' ? 0.01 : unit === 'cm' ? 1 : 10
 
-  const [width, setWidth]   = useState(800)
-  const [depth, setDepth]   = useState(450)
-  const [recess, setRecess] = useState(4)
+  const [width, setWidth]     = useState(fromMm(800))
+  const [depth, setDepth]     = useState(fromMm(450))
+  const [recess, setRecess]   = useState(4)  // always mm
   const [parentId, setParentId] = useState(defaultCt?.id ?? '')
-  const [posX, setPosX]     = useState(100)
-  const [posY, setPosY]     = useState(80)
+  const [posX, setPosX]       = useState(fromMm(100))
+  const [posY, setPosY]       = useState(fromMm(80))
 
   const handleCreate = () => {
     const ct = countertops.find((c) => c.id === parentId)
@@ -23,14 +26,14 @@ export const NewWetAreaDialog: React.FC = () => {
       id: generateId('wet-area'),
       type: 'wet-area',
       position: {
-        x: ct ? ct.position.x + posX : posX,
-        y: ct ? ct.position.y + posY : posY,
+        x: ct ? ct.position.x + Math.round(toMm(posX)) : Math.round(toMm(posX)),
+        y: ct ? ct.position.y + Math.round(toMm(posY)) : Math.round(toMm(posY)),
       },
       locked: false,
       visible: true,
-      width,
-      depth,
-      recess,
+      width:  Math.round(toMm(width)),
+      depth:  Math.round(toMm(depth)),
+      recess, // rebaixo always in mm
       parentId,
     }
     store.addElement(el)
@@ -49,33 +52,30 @@ export const NewWetAreaDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
-
       <FormSection>
-        <FormField label="Largura" unit="mm">
-          <input id="wa-width" type="number" min={100} step={10} value={width}
+        <FormField label="Largura" unit={unit}>
+          <input id="wa-width" type="number" min={0} step={step} value={width}
             onChange={(e) => setWidth(Number(e.target.value))} />
         </FormField>
-        <FormField label="Profundidade" unit="mm">
-          <input id="wa-depth" type="number" min={100} step={10} value={depth}
+        <FormField label="Profundidade" unit={unit}>
+          <input id="wa-depth" type="number" min={0} step={step} value={depth}
             onChange={(e) => setDepth(Number(e.target.value))} />
         </FormField>
-        <FormField label="Rebaixo" unit="mm" hint="Profundidade do rebaixo da área molhada">
+        <FormField label="Rebaixo" unit="mm" hint="Profundidade do rebaixo">
           <input id="wa-recess" type="number" min={1} max={20} step={0.5} value={recess}
             onChange={(e) => setRecess(Number(e.target.value))} />
         </FormField>
       </FormSection>
-
-      <FormSection title="Posição a partir da borda da bancada">
-        <FormField label="X" unit="mm">
-          <input id="wa-pos-x" type="number" min={0} step={10} value={posX}
+      <FormSection title={`Posição a partir da borda (${unit})`}>
+        <FormField label="X" unit={unit}>
+          <input id="wa-pos-x" type="number" min={0} step={step} value={posX}
             onChange={(e) => setPosX(Number(e.target.value))} />
         </FormField>
-        <FormField label="Y" unit="mm">
-          <input id="wa-pos-y" type="number" min={0} step={10} value={posY}
+        <FormField label="Y" unit={unit}>
+          <input id="wa-pos-y" type="number" min={0} step={step} value={posY}
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>
       </FormSection>
-
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
         <BtnPrimary id="create-wet-area-btn" onClick={handleCreate} disabled={!parentId}>

@@ -182,12 +182,19 @@ export type Layer = {
 
 export type GridSpacing = 10 | 50 | 100 | 500
 
+export type RoomBounds = {
+  width: number   // mm – room width
+  height: number  // mm – room height
+  show: boolean   // whether to render the room boundary
+}
+
 export type ProjectSettings = {
   unit: Unit
   showGrid: boolean
   snapToGrid: boolean
   gridSpacing: GridSpacing
   showDimensions: boolean
+  roomBounds?: RoomBounds
 }
 
 // ─── Project ─────────────────────────────────────────────────────────────────

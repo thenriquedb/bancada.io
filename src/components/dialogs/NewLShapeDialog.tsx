@@ -3,6 +3,7 @@ import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } 
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { MATERIALS } from '../../models/materials.ts'
+import { useDialogUnit } from '../../utils/useDialogUnit.ts'
 import type { CountertopElement, EdgeFinishes } from '../../models/types.ts'
 
 const DEFAULT_EDGE: EdgeFinishes = {
@@ -12,38 +13,75 @@ const DEFAULT_EDGE: EdgeFinishes = {
   right: 'reto',
 }
 
+/**
+ * L-shape countertop dialog.
+ *
+ * Top view orientation:
+ *
+ *   ←──── Comprimento A ────────────────────────→
+ *   ┌──────────────────────────────────────────┐  ↑
+ *   │              Segmento A                  │  Profundidade A
+ *   └──────┬───────────────────────────────────┘  ↓
+ *          │  ↑
+ *   ←DepB→ │  Comprimento B   (medido a partir da borda inferior de A)
+ *          │  ↓
+ *   └──────┘
+ *
+ * Data model mapping:
+ *   segmentA.width  = comprimento A  (horizontal total)
+ *   segmentA.depth  = profundidade A (vertical strip height)
+ *   segmentB.width  = profundidade B (horizontal depth of B, the left column)
+ *   segmentB.depth  = comprimento B  (vertical extent of B BELOW A — does NOT include A.depth)
+ */
 export const NewLShapeDialog: React.FC = () => {
   const store = useEditorStore()
   const project = store.project
   const { viewport } = store
+  const { unit, toMm, fromMm } = useDialogUnit()
 
-  const [aWidth, setAWidth]   = useState(2400)
-  const [aDepth, setADepth]   = useState(620)
-  const [bWidth, setBWidth]   = useState(1600)
-  const [bDepth, setBDepth]   = useState(620)
-  const [thickness, setThickness] = useState<12 | 15 | 20 | 30>(project.thickness as 12 | 15 | 20 | 30)
+  const step = unit === 'm' ? 0.01 : unit === 'cm' ? 1 : 10
+  const min  = unit === 'm' ? 0.1  : unit === 'cm' ? 10 : 100
+
+  // Segment A
+  const [aComprimento, setAComprimento] = useState(fromMm(2600)) // horizontal length
+  const [aProfundidade, setAProfundidade] = useState(fromMm(700)) // front-to-back depth
+
+  // Segment B
+  // comprimento = how far B goes DOWN from A's bottom edge (does NOT include A's depth)
+  const [bComprimento, setBComprimento] = useState(fromMm(1500))
+  // profundidade = front-to-back depth of the left column
+  const [bProfundidade, setBProfundidade] = useState(fromMm(700))
+
+  const [thickness, setThickness]   = useState<12 | 15 | 20 | 30>(project.thickness as 12 | 15 | 20 | 30)
   const [materialId, setMaterialId] = useState(project.material?.id ?? MATERIALS[0].id)
+
+  // Millimeter values for the stored model
+  const aWmm = Math.round(toMm(aComprimento))   // segmentA.width
+  const aDmm = Math.round(toMm(aProfundidade))  // segmentA.depth
+  const bWmm = Math.round(toMm(bProfundidade))  // segmentB.width  (horizontal depth of B column)
+  const bDmm = Math.round(toMm(bComprimento))   // segmentB.depth  (vertical extent below A)
+
+  const totalW = aWmm          // full horizontal span = A's length
+  const totalH = aDmm + bDmm   // full vertical span = A's depth + B's length
 
   const handleCreate = () => {
     const cx = (window.innerWidth * 0.6 / 2 - viewport.panX) / viewport.zoom
     const cy = (window.innerHeight / 2 - viewport.panY) / viewport.zoom
-    const totalW = Math.max(aWidth, bWidth)
-    const totalH = aDepth + bDepth
-    const px = Math.max(0, cx - totalW / 2)
-    const py = Math.max(0, cy - totalH / 2)
+    const px = Math.max(0, Math.round((cx - totalW / 2) / 10) * 10)
+    const py = Math.max(0, Math.round((cy - totalH / 2) / 10) * 10)
 
     const material = MATERIALS.find((m) => m.id === materialId) ?? MATERIALS[0]
 
     const el: CountertopElement = {
       id: generateId('countertop'),
       type: 'countertop',
-      position: { x: Math.round(px / 10) * 10, y: Math.round(py / 10) * 10 },
+      position: { x: px, y: py },
       locked: false,
       visible: true,
       geometry: {
         type: 'l-shape',
-        segmentA: { width: aWidth, depth: aDepth },
-        segmentB: { width: bWidth, depth: bDepth },
+        segmentA: { width: aWmm, depth: aDmm },
+        segmentB: { width: bWmm, depth: bDmm },
       },
       thickness,
       material,
@@ -54,36 +92,111 @@ export const NewLShapeDialog: React.FC = () => {
     store.setOpenDialog(null)
   }
 
+  // ── Proportional SVG diagram ──────────────────────────────────────────────
+  const dW = 260, dH = 180
+  const pad = 24
+  const s = Math.min((dW - pad * 2) / totalW, (dH - pad * 2 - 20) / totalH)
+  const ox = pad, oy = pad
+
+  const saW = aWmm * s
+  const saH = aDmm * s
+  const sbW = bWmm * s  // left column width
+  const sbH = bDmm * s  // B extension height
+
+  const pts = [
+    [ox,          oy],
+    [ox + saW,    oy],
+    [ox + saW,    oy + saH],
+    [ox + sbW,    oy + saH],
+    [ox + sbW,    oy + saH + sbH],
+    [ox,          oy + saH + sbH],
+  ].map(([x, y]) => `${x},${y}`).join(' ')
+
+  // Dimension label helpers
+  const midAx = ox + saW / 2
+  const midAy = oy + saH / 2
+  const midBx = ox + sbW / 2
+  const midBy = oy + saH + sbH / 2
+
   return (
-    <Modal title="Nova Bancada em L" onClose={() => store.setOpenDialog(null)} width={460}>
+    <Modal title="Nova Bancada em L" onClose={() => store.setOpenDialog(null)} width={480}>
+      {/* Proportional diagram */}
       <div className="lshape-diagram" aria-hidden="true">
-        <svg viewBox="0 0 200 160" width="200" height="160">
-          <rect x="40" y="10" width="120" height="40" fill="#e8f4fd" stroke="#1971c2" strokeWidth="1.5"/>
-          <rect x="40" y="50" width="60" height="90" fill="#e8f4fd" stroke="#1971c2" strokeWidth="1.5"/>
-          <text x="100" y="34" textAnchor="middle" fontSize="9" fill="#1971c2">Segmento A</text>
-          <text x="70" y="100" textAnchor="middle" fontSize="9" fill="#1971c2">Segmento B</text>
+        <svg viewBox={`0 0 ${dW} ${dH}`} width={dW} height={dH}>
+          <polygon points={pts} fill="#e8f4fd" stroke="#1971c2" strokeWidth="1.5" />
+
+          {/* Segment A label */}
+          {saW > 40 && saH > 12 && (
+            <text x={midAx} y={midAy} textAnchor="middle" dominantBaseline="middle"
+              fontSize="9" fill="#1971c2" fontWeight="500">Seg A</text>
+          )}
+          {/* Segment B label */}
+          {sbW > 20 && sbH > 12 && (
+            <text x={midBx} y={midBy} textAnchor="middle" dominantBaseline="middle"
+              fontSize="9" fill="#1971c2" fontWeight="500">Seg B</text>
+          )}
+
+          {/* A.depth dimension (left side, full) */}
+          <line x1={ox - 8} y1={oy} x2={ox - 8} y2={oy + saH}
+            stroke="#e67700" strokeWidth="1" />
+          <line x1={ox - 11} y1={oy}   x2={ox - 5} y2={oy}   stroke="#e67700" strokeWidth="1" />
+          <line x1={ox - 11} y1={oy + saH} x2={ox - 5} y2={oy + saH} stroke="#e67700" strokeWidth="1" />
+          <text x={ox - 14} y={(oy + oy + saH) / 2} textAnchor="end" dominantBaseline="middle"
+            fontSize="7.5" fill="#e67700">
+            {aProfundidade.toFixed(unit === 'mm' ? 0 : 0)}{unit}
+          </text>
+
+          {/* B.length dimension (left side, below A) */}
+          <line x1={ox - 8} y1={oy + saH} x2={ox - 8} y2={oy + saH + sbH}
+            stroke="#2f9e44" strokeWidth="1" />
+          <line x1={ox - 11} y1={oy + saH}      x2={ox - 5} y2={oy + saH}      stroke="#2f9e44" strokeWidth="1" />
+          <line x1={ox - 11} y1={oy + saH + sbH} x2={ox - 5} y2={oy + saH + sbH} stroke="#2f9e44" strokeWidth="1" />
+          {sbH > 10 && (
+            <text x={ox - 14} y={oy + saH + sbH / 2} textAnchor="end" dominantBaseline="middle"
+              fontSize="7.5" fill="#2f9e44">
+              {bComprimento.toFixed(unit === 'mm' ? 0 : 0)}{unit}
+            </text>
+          )}
+
+          {/* A.width dimension (top) */}
+          <line x1={ox} y1={oy - 8} x2={ox + saW} y2={oy - 8}
+            stroke="#1971c2" strokeWidth="1" />
+          <line x1={ox}       y1={oy - 11} x2={ox}       y2={oy - 5} stroke="#1971c2" strokeWidth="1" />
+          <line x1={ox + saW} y1={oy - 11} x2={ox + saW} y2={oy - 5} stroke="#1971c2" strokeWidth="1" />
+          {saW > 30 && (
+            <text x={ox + saW / 2} y={oy - 12} textAnchor="middle" dominantBaseline="auto"
+              fontSize="7.5" fill="#1971c2">
+              {aComprimento.toFixed(unit === 'mm' ? 0 : 0)}{unit}
+            </text>
+          )}
         </svg>
       </div>
 
-      <FormSection title="Segmento A (horizontal superior)">
-        <FormField label="Comprimento" unit="mm">
-          <input id="la-width" type="number" min={200} max={8000} step={10} value={aWidth}
-            onChange={(e) => setAWidth(Number(e.target.value))} />
+      {/* ── Segment A ─────────────────────────────────────────── */}
+      <FormSection title="Segmento A (faixa horizontal)">
+        <FormField label="Comprimento" unit={unit}>
+          <input id="la-comprimento" type="number" min={min} step={step} value={aComprimento}
+            onChange={(e) => setAComprimento(Number(e.target.value))} />
         </FormField>
-        <FormField label="Profundidade" unit="mm">
-          <input id="la-depth" type="number" min={200} max={2000} step={10} value={aDepth}
-            onChange={(e) => setADepth(Number(e.target.value))} />
+        <FormField label="Profundidade" unit={unit}>
+          <input id="la-profundidade" type="number" min={min} step={step} value={aProfundidade}
+            onChange={(e) => setAProfundidade(Number(e.target.value))} />
         </FormField>
       </FormSection>
 
-      <FormSection title="Segmento B (vertical)">
-        <FormField label="Comprimento" unit="mm">
-          <input id="lb-width" type="number" min={200} max={8000} step={10} value={bWidth}
-            onChange={(e) => setBWidth(Number(e.target.value))} />
+      {/* ── Segment B ─────────────────────────────────────────── */}
+      <FormSection title="Segmento B (coluna lateral)">
+        <FormField
+          label="Comprimento"
+          unit={unit}
+          hint="Medido a partir da borda inferior de A — não inclui a profundidade de A"
+        >
+          <input id="lb-comprimento" type="number" min={min} step={step} value={bComprimento}
+            onChange={(e) => setBComprimento(Number(e.target.value))} />
         </FormField>
-        <FormField label="Profundidade" unit="mm">
-          <input id="lb-depth" type="number" min={200} max={2000} step={10} value={bDepth}
-            onChange={(e) => setBDepth(Number(e.target.value))} />
+        <FormField label="Profundidade" unit={unit}>
+          <input id="lb-profundidade" type="number" min={min} step={step} value={bProfundidade}
+            onChange={(e) => setBProfundidade(Number(e.target.value))} />
         </FormField>
       </FormSection>
 
@@ -101,6 +214,13 @@ export const NewLShapeDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
+
+      <div className="form-preview">
+        <span className="form-preview__label">Dimensões totais:</span>
+        <span className="form-preview__value">
+          {aComprimento.toFixed(0)} × {(aProfundidade + bComprimento).toFixed(0)} {unit}
+        </span>
+      </div>
 
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>

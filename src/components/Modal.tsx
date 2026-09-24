@@ -13,22 +13,26 @@ type ModalProps = {
  * Uses React portal to render outside the editor DOM tree.
  */
 export const Modal: React.FC<ModalProps> = ({ title, onClose, children, width = 400 }) => {
-  const dialogRef = useRef<HTMLDivElement>(null)
+  const dialogRef  = useRef<HTMLDivElement>(null)
+  // Keep a stable ref so the mount-only effect always calls the latest onClose
+  // without re-running (which would steal focus from inputs on every keystroke)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
-  // Trap focus and close on Escape
   useEffect(() => {
-    const prev = document.activeElement as HTMLElement | null
+    // Focus the dialog once on mount so Escape works immediately
     dialogRef.current?.focus()
+    const prev = document.activeElement as HTMLElement | null
 
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', handleKey)
     return () => {
       document.removeEventListener('keydown', handleKey)
       prev?.focus()
     }
-  }, [onClose])
+  }, []) // ← intentionally empty: run only on mount/unmount
 
   return createPortal(
     <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>

@@ -1,122 +1,230 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useEditorStore, selectProject, selectSettings } from '../store/editorStore.ts'
+import { useDialogUnit } from '../utils/useDialogUnit.ts'
+import type { GridSpacing } from '../models/types.ts'
 
-/**
- * Left sidebar – element palette.
- */
 export const ElementPalette: React.FC = () => {
   const settings = useEditorStore(selectSettings)
-  const project = useEditorStore(selectProject)
+  const project  = useEditorStore(selectProject)
+  const store    = useEditorStore()
+  const { unit, fromMm, toMm } = useDialogUnit()
 
-  const store = useEditorStore()
+  const [roomW, setRoomW] = useState(String(fromMm(settings.roomBounds?.width ?? 3000)))
+  const [roomH, setRoomH] = useState(String(fromMm(settings.roomBounds?.height ?? 2500)))
 
-  const gridOptions: Array<{ label: string; value: 10 | 50 | 100 | 500 }> = [
-    { label: '10 mm', value: 10 },
-    { label: '50 mm', value: 50 },
+  const gridOptions: Array<{ label: string; value: GridSpacing }> = [
+    { label: '10 mm',  value: 10  },
+    { label: '50 mm',  value: 50  },
     { label: '100 mm', value: 100 },
     { label: '500 mm', value: 500 },
   ]
 
+  const applyRoomBounds = () => {
+    const w = Math.round(toMm(parseFloat(roomW)))
+    const h = Math.round(toMm(parseFloat(roomH)))
+    if (!w || !h || w < 100 || h < 100) return
+    store.updateSettings({
+      roomBounds: { width: w, height: h, show: true },
+    })
+  }
+
+  const clearRoomBounds = () => {
+    store.updateSettings({ roomBounds: undefined })
+  }
+
+  const hasRoom = !!settings.roomBounds?.show
+
   return (
     <aside className="element-palette" aria-label="Painel de elementos">
-      {/* Elements section */}
+
+      {/* ── Elements ─────────────────────────────────────────────────────── */}
       <section className="palette-section">
-        <h2 className="palette-section__title">Elementos</h2>
+        <h2 className="palette-section__title">Bancada</h2>
         <div className="palette-items">
-          <PaletteItem icon="▭" label="Bancada Reta" disabled tooltip="Disponível na Fase 3" />
-          <PaletteItem icon="⌐" label="Bancada em L" disabled tooltip="Disponível na Fase 3" />
-          <PaletteItem icon="⬚" label="Cuba" disabled tooltip="Disponível na Fase 4" />
-          <PaletteItem icon="⊞" label="Cooktop" disabled tooltip="Disponível na Fase 4" />
-          <PaletteItem icon="○" label="Torneira" disabled tooltip="Disponível na Fase 4" />
-          <PaletteItem icon="⊙" label="Lixeira" disabled tooltip="Disponível na Fase 4" />
-          <PaletteItem icon="≋" label="Área Molhada" disabled tooltip="Disponível na Fase 6" />
-          <PaletteItem icon="‖" label="Rodabanca" disabled tooltip="Disponível na Fase 6" />
+          <PaletteItem icon="▭" label="Reta" onClick={() => store.setOpenDialog('new-countertop')} />
+          <PaletteItem icon="⌐" label="Em L"  onClick={() => store.setOpenDialog('new-lshape')} />
         </div>
       </section>
 
-      {/* Grid settings section */}
+      <section className="palette-section">
+        <h2 className="palette-section__title">Recortes</h2>
+        <div className="palette-items">
+          <PaletteItem icon="⬚" label="Cuba"     onClick={() => store.setOpenDialog('new-sink')} />
+          <PaletteItem icon="⊞" label="Cooktop"  onClick={() => store.setOpenDialog('new-cooktop')} />
+          <PaletteItem icon="○" label="Torneira" onClick={() => store.setOpenDialog('new-faucet')} />
+          <PaletteItem icon="⊙" label="Lixeira"  onClick={() => store.setOpenDialog('new-trash')} />
+        </div>
+      </section>
+
+      <section className="palette-section">
+        <h2 className="palette-section__title">Acabamentos</h2>
+        <div className="palette-items">
+          <PaletteItem icon="≋" label="Área Molhada" onClick={() => store.setOpenDialog('new-wet-area')} />
+          <PaletteItem icon="‖" label="Rodabanca"    onClick={() => store.setOpenDialog('new-backsplash')} />
+        </div>
+      </section>
+
+      {/* ── Cômodo ──────────────────────────────────────────────────────── */}
+      <section className="palette-section palette-section--room">
+        <h2 className="palette-section__title">
+          <span>Cômodo</span>
+          {hasRoom && <span className="palette-badge">Ativo</span>}
+        </h2>
+        <p className="palette-hint">
+          Defina a área real do cômodo para usar como referência de escala.
+        </p>
+        <div className="palette-controls">
+          <label className="palette-control palette-control--column">
+            <span>Largura</span>
+            <div className="palette-control__row">
+              <input
+                id="room-width"
+                type="number"
+                min={unit === 'm' ? 0.5 : unit === 'cm' ? 50 : 500}
+                step={unit === 'm' ? 0.1 : unit === 'cm' ? 10 : 100}
+                value={roomW}
+                onChange={(e) => setRoomW(e.target.value)}
+                placeholder={unit === 'm' ? 'ex: 4.2' : unit === 'cm' ? 'ex: 420' : 'ex: 4200'}
+              />
+              <span className="palette-unit">{unit}</span>
+            </div>
+          </label>
+          <label className="palette-control palette-control--column">
+            <span>Comprimento</span>
+            <div className="palette-control__row">
+              <input
+                id="room-height"
+                type="number"
+                min={unit === 'm' ? 0.5 : unit === 'cm' ? 50 : 500}
+                step={unit === 'm' ? 0.1 : unit === 'cm' ? 10 : 100}
+                value={roomH}
+                onChange={(e) => setRoomH(e.target.value)}
+                placeholder={unit === 'm' ? 'ex: 3.6' : unit === 'cm' ? 'ex: 360' : 'ex: 3600'}
+              />
+              <span className="palette-unit">{unit}</span>
+            </div>
+          </label>
+        </div>
+
+        {hasRoom && (
+          <label className="palette-control">
+            <input
+              id="toggle-room"
+              type="checkbox"
+              checked={settings.roomBounds?.show ?? false}
+              onChange={(e) =>
+                store.updateSettings({
+                  roomBounds: settings.roomBounds
+                    ? { ...settings.roomBounds, show: e.target.checked }
+                    : undefined,
+                })
+              }
+            />
+            <span>Mostrar limite do cômodo</span>
+          </label>
+        )}
+
+        <div className="palette-actions">
+          <button
+            id="apply-room-btn"
+            className="btn btn--room"
+            onClick={applyRoomBounds}
+            title="Aplicar dimensões do cômodo"
+          >
+            {hasRoom ? 'Atualizar cômodo' : 'Definir cômodo'}
+          </button>
+          {hasRoom && (
+            <button
+              id="clear-room-btn"
+              className="btn btn--ghost"
+              onClick={clearRoomBounds}
+              title="Remover limite do cômodo"
+            >
+              Remover
+            </button>
+          )}
+        </div>
+
+        {hasRoom && settings.roomBounds && (
+          <button
+            id="fit-room-btn"
+            className="btn btn--ghost btn--full"
+            onClick={() => {
+              /* fit viewport to room */
+              const rb = settings.roomBounds!
+              const canvasW = document.querySelector('.canvas-container')?.clientWidth ?? 800
+              const canvasH = document.querySelector('.canvas-container')?.clientHeight ?? 600
+              const margin = 60
+              const zoom = Math.min(
+                (canvasW - margin * 2) / rb.width,
+                (canvasH - margin * 2) / rb.height
+              )
+              store.setViewport({ zoom, panX: margin, panY: margin })
+            }}
+          >
+            Enquadrar cômodo
+          </button>
+        )}
+      </section>
+
+      {/* ── Grade ────────────────────────────────────────────────────────── */}
       <section className="palette-section">
         <h2 className="palette-section__title">Grade</h2>
         <div className="palette-controls">
           <label className="palette-control">
-            <input
-              id="toggle-grid"
-              type="checkbox"
-              checked={settings.showGrid}
-              onChange={(e) => store.updateSettings({ showGrid: e.target.checked })}
-            />
+            <input id="toggle-grid" type="checkbox" checked={settings.showGrid}
+              onChange={(e) => store.updateSettings({ showGrid: e.target.checked })} />
             <span>Mostrar grade</span>
           </label>
           <label className="palette-control">
-            <input
-              id="toggle-snap"
-              type="checkbox"
-              checked={settings.snapToGrid}
-              onChange={(e) => store.updateSettings({ snapToGrid: e.target.checked })}
-            />
+            <input id="toggle-snap" type="checkbox" checked={settings.snapToGrid}
+              onChange={(e) => store.updateSettings({ snapToGrid: e.target.checked })} />
             <span>Snap à grade</span>
+          </label>
+          <label className="palette-control">
+            <input id="toggle-dims" type="checkbox" checked={settings.showDimensions}
+              onChange={(e) => store.updateSettings({ showDimensions: e.target.checked })} />
+            <span>Mostrar cotas</span>
           </label>
           <label className="palette-control palette-control--column">
             <span>Espaçamento</span>
-            <select
-              id="grid-spacing"
-              value={settings.gridSpacing}
-              onChange={(e) =>
-                store.updateSettings({ gridSpacing: Number(e.target.value) as 10 | 50 | 100 | 500 })
-              }
-            >
-              {gridOptions.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
+            <select id="grid-spacing" value={settings.gridSpacing}
+              onChange={(e) => store.updateSettings({ gridSpacing: Number(e.target.value) as GridSpacing })}>
+              {gridOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </label>
         </div>
       </section>
 
-      {/* Unit section */}
+      {/* ── Unidade ──────────────────────────────────────────────────────── */}
       <section className="palette-section">
         <h2 className="palette-section__title">Unidade</h2>
         <div className="palette-units">
           {(['mm', 'cm', 'm'] as const).map((u) => (
-            <button
-              key={u}
-              id={`unit-${u}`}
+            <button key={u} id={`unit-${u}`}
               className={`unit-btn${settings.unit === u ? ' unit-btn--active' : ''}`}
-              onClick={() => store.setUnit(u)}
-              aria-pressed={settings.unit === u}
-            >
+              onClick={() => store.setUnit(u)} aria-pressed={settings.unit === u}>
               {u}
             </button>
           ))}
         </div>
       </section>
 
-      {/* Project info */}
+      {/* ── Projeto ──────────────────────────────────────────────────────── */}
       <section className="palette-section palette-section--grow">
         <h2 className="palette-section__title">Projeto</h2>
         <div className="palette-controls">
           <label className="palette-control palette-control--column">
             <span>Nome</span>
-            <input
-              id="project-name"
-              type="text"
-              value={project.name}
+            <input id="project-name" type="text" value={project.name}
               onChange={(e) => store.updateProjectMeta({ name: e.target.value })}
-              placeholder="Nome do projeto"
-            />
+              placeholder="Nome do projeto" />
           </label>
           <label className="palette-control palette-control--column">
-            <span>Espessura</span>
-            <select
-              id="project-thickness"
-              value={project.thickness}
-              onChange={(e) =>
-                store.updateProjectMeta({ thickness: Number(e.target.value) as 12 | 15 | 20 | 30 })
-              }
-            >
-              {[12, 15, 20, 30].map((t) => (
-                <option key={t} value={t}>{t} mm</option>
-              ))}
+            <span>Espessura padrão</span>
+            <select id="project-thickness" value={project.thickness}
+              onChange={(e) => store.updateProjectMeta({ thickness: Number(e.target.value) as 12 | 15 | 20 | 30 })}>
+              {[12, 15, 20, 30].map((t) => <option key={t} value={t}>{t} mm</option>)}
             </select>
           </label>
         </div>
@@ -125,17 +233,17 @@ export const ElementPalette: React.FC = () => {
   )
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── PaletteItem ─────────────────────────────────────────────────────────────
 
 type PaletteItemProps = {
   icon: string
   label: string
+  onClick?: () => void
   disabled?: boolean
   tooltip?: string
-  onClick?: () => void
 }
 
-const PaletteItem: React.FC<PaletteItemProps> = ({ icon, label, disabled, tooltip, onClick }) => (
+const PaletteItem: React.FC<PaletteItemProps> = ({ icon, label, onClick, disabled, tooltip }) => (
   <button
     className={`palette-item${disabled ? ' palette-item--disabled' : ''}`}
     onClick={onClick}
