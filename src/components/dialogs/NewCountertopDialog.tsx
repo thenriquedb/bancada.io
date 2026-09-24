@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { MATERIALS } from '../../models/materials.ts'
@@ -53,8 +53,8 @@ export const NewCountertopDialog: React.FC = () => {
 
   return (
     <Modal title="Nova Bancada Reta" onClose={() => store.setOpenDialog(null)}>
-      <FormSection>
-        <FormField label="Comprimento" unit={unit}>
+      <FormSection title="Dimensões Principais">
+        <FormField label="Comprimento" unit={unit} tooltip="Tamanho total da bancada medido da esquerda para a direita.">
           <input
             id="ct-width"
             type="number"
@@ -65,7 +65,7 @@ export const NewCountertopDialog: React.FC = () => {
             onChange={(e) => setWidth(Number(e.target.value))}
           />
         </FormField>
-        <FormField label="Profundidade" unit={unit}>
+        <FormField label="Profundidade" unit={unit} tooltip="Distância da parede até a borda frontal da bancada.">
           <input
             id="ct-depth"
             type="number"
@@ -76,7 +76,7 @@ export const NewCountertopDialog: React.FC = () => {
             onChange={(e) => setDepth(Number(e.target.value))}
           />
         </FormField>
-        <FormField label="Espessura" unit="mm">
+        <FormField label="Espessura da Chapa" unit="mm" tooltip="A espessura original da pedra/chapa antes do acabamento (engrosso).">
           <select
             id="ct-thickness"
             value={thickness}
@@ -88,6 +88,10 @@ export const NewCountertopDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
+
+      <Callout type="info">
+        Dica: Você poderá ajustar as dimensões arrastando as bordas diretamente no Canvas mais tarde!
+      </Callout>
 
       <FormSection title="Material">
         <FormField label="Material">

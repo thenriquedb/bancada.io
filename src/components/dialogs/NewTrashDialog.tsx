@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
@@ -44,16 +44,6 @@ export const NewTrashDialog: React.FC = () => {
 
   return (
     <Modal title="Nova Lixeira Embutida" onClose={() => store.setOpenDialog(null)}>
-      <FormSection title="Bancada">
-        <FormField label="Bancada">
-          <select id="trash-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
-            <option value="">Selecione...</option>
-            {parents.map((ct) => (
-              <option key={ct.id} value={ct.id}>{ct.label ?? (ct.type === 'countertop' ? `Bancada (${ct.geometry.type})` : 'Área Molhada')}</option>
-            ))}
-          </select>
-        </FormField>
-      </FormSection>
       <FormSection title="Formato">
         <div className="radio-group">
           <label className="radio-option">
@@ -66,23 +56,34 @@ export const NewTrashDialog: React.FC = () => {
           </label>
         </div>
         {shape === 'circular' ? (
-          <FormField label="Diâmetro" unit={unit}>
+          <FormField label="Diâmetro do furo" unit={unit} tooltip="Diâmetro necessário para encaixar a lixeira.">
             <input id="trash-diameter" type="number" min={0} step={step} value={diameter}
               onChange={(e) => setDiameter(Number(e.target.value))} />
           </FormField>
         ) : (
           <>
-            <FormField label="Largura" unit={unit}>
+            <FormField label="Largura" unit={unit} tooltip="A largura total da lixeira.">
               <input id="trash-width" type="number" min={0} step={step} value={width}
                 onChange={(e) => setWidth(Number(e.target.value))} />
             </FormField>
-            <FormField label="Profundidade" unit={unit}>
+            <FormField label="Profundidade" unit={unit} tooltip="A profundidade total da lixeira.">
               <input id="trash-depth" type="number" min={0} step={step} value={depth}
                 onChange={(e) => setDepth(Number(e.target.value))} />
             </FormField>
           </>
         )}
       </FormSection>
+      <FormSection title="Local">
+        <FormField label="Elemento Pai" tooltip="Onde a lixeira será instalada.">
+          <select id="trash-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
+            <option value="">Selecione...</option>
+            {parents.map((ct) => (
+              <option key={ct.id} value={ct.id}>{ct.label ?? (ct.type === 'countertop' ? `Bancada (${ct.geometry.type})` : 'Área Molhada')}</option>
+            ))}
+          </select>
+        </FormField>
+      </FormSection>
+
       <FormSection title={`Posição a partir da borda (${unit})`}>
         <FormField label="Centro X" unit={unit}>
           <input id="trash-pos-x" type="number" min={0} step={step} value={posX}
@@ -93,6 +94,9 @@ export const NewTrashDialog: React.FC = () => {
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>
       </FormSection>
+      <Callout type="info">
+        Dica: Arraste a lixeira no Canvas para reposicioná-la com mais facilidade.
+      </Callout>
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
         <BtnPrimary id="create-trash-btn" onClick={handleCreate} disabled={!parentId}>

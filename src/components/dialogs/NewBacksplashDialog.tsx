@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
@@ -61,8 +61,23 @@ export const NewBacksplashDialog: React.FC = () => {
 
   return (
     <Modal title="Nova Rodabanca" onClose={() => store.setOpenDialog(null)}>
+      <FormSection title="Dimensões">
+        <FormField label="Altura" unit={unit} tooltip="A altura da rodabanca a partir da superfície da bancada.">
+          <input id="bs-height" type="number" min={0} step={step} value={height}
+            onChange={(e) => setHeight(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Espessura" unit="mm" tooltip="Espessura da chapa da rodabanca.">
+          <select id="bs-thickness" value={thickness}
+            onChange={(e) => setThickness(Number(e.target.value))}>
+            {[12, 15, 20, 30].map((t) => <option key={t} value={t}>{t} mm</option>)}
+          </select>
+        </FormField>
+        <FormField label="Comprimento (auto)" unit={unit} tooltip="Calculado automaticamente com base no comprimento do elemento pai.">
+          <span className="prop-value">{len > 0 ? len.toFixed(unit === 'mm' ? 0 : 1) : '—'}</span>
+        </FormField>
+      </FormSection>
       <FormSection title="Local">
-        <FormField label="Pai (Bancada/Área Molhada)" hint="A rodabanca será criada na parte traseira">
+        <FormField label="Elemento Pai" tooltip="Selecione a bancada ou área molhada para adicionar a rodabanca.">
           <select id="bs-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
             {parents.map((p) => (
@@ -71,21 +86,9 @@ export const NewBacksplashDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
-      <FormSection>
-        <FormField label="Altura" unit={unit}>
-          <input id="bs-height" type="number" min={0} step={step} value={height}
-            onChange={(e) => setHeight(Number(e.target.value))} />
-        </FormField>
-        <FormField label="Espessura" unit="mm">
-          <select id="bs-thickness" value={thickness}
-            onChange={(e) => setThickness(Number(e.target.value))}>
-            {[12, 15, 20, 30].map((t) => <option key={t} value={t}>{t} mm</option>)}
-          </select>
-        </FormField>
-        <FormField label="Comprimento (auto)" unit={unit}>
-          <span className="prop-value">{len > 0 ? len.toFixed(unit === 'mm' ? 0 : 1) : '—'}</span>
-        </FormField>
-      </FormSection>
+      <Callout type="info">
+        A rodabanca será criada automaticamente na parte traseira da peça selecionada, acompanhando toda sua extensão.
+      </Callout>
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
         <BtnPrimary id="create-backsplash-btn" onClick={handleCreate} disabled={!parentId}>

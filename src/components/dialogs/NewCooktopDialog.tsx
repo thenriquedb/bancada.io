@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
@@ -43,24 +43,24 @@ export const NewCooktopDialog: React.FC = () => {
       {parents.length === 0 && (
         <div className="dialog-warning">⚠ Crie uma bancada antes de adicionar um cooktop.</div>
       )}
-      <FormSection title="Bancada">
-        <FormField label="Bancada">
+      <FormSection title="Dimensões">
+        <FormField label="Largura total" unit={unit} tooltip="A largura total externa do cooktop.">
+          <input id="cooktop-width" type="number" min={0} step={step} value={width}
+            onChange={(e) => setWidth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Profundidade" unit={unit} tooltip="A profundidade total externa do cooktop.">
+          <input id="cooktop-depth" type="number" min={0} step={step} value={depth}
+            onChange={(e) => setDepth(Number(e.target.value))} />
+        </FormField>
+      </FormSection>
+      <FormSection title="Local">
+        <FormField label="Elemento Pai" tooltip="Selecione onde o cooktop será instalado.">
           <select id="ct-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
             {parents.map((ct) => (
               <option key={ct.id} value={ct.id}>{ct.label ?? (ct.type === 'countertop' ? `Local (${ct.geometry.type})` : 'Área Molhada')}</option>
             ))}
           </select>
-        </FormField>
-      </FormSection>
-      <FormSection title="Equipamento">
-        <FormField label="Largura total" unit={unit}>
-          <input id="cooktop-width" type="number" min={0} step={step} value={width}
-            onChange={(e) => setWidth(Number(e.target.value))} />
-        </FormField>
-        <FormField label="Profundidade" unit={unit}>
-          <input id="cooktop-depth" type="number" min={0} step={step} value={depth}
-            onChange={(e) => setDepth(Number(e.target.value))} />
         </FormField>
       </FormSection>
 
@@ -74,7 +74,9 @@ export const NewCooktopDialog: React.FC = () => {
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>
       </FormSection>
-      <div className="form-hint">⚠ Confirme o recorte no gabarito do fabricante antes da fabricação.</div>
+      <Callout type="warning" title="Atenção">
+        Confirme o recorte no gabarito do fabricante antes da fabricação para evitar perdas.
+      </Callout>
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
         <BtnPrimary id="create-cooktop-btn" onClick={handleCreate} disabled={!parentId}>

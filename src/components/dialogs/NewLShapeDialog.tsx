@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { MATERIALS } from '../../models/materials.ts'
@@ -174,11 +174,11 @@ export const NewLShapeDialog: React.FC = () => {
 
       {/* ── Segment A ─────────────────────────────────────────── */}
       <FormSection title="Segmento A (faixa horizontal)">
-        <FormField label="Comprimento" unit={unit}>
+        <FormField label="Comprimento" unit={unit} tooltip="A largura total da parte superior (Seg A).">
           <input id="la-comprimento" type="number" min={min} step={step} value={aComprimento}
             onChange={(e) => setAComprimento(Number(e.target.value))} />
         </FormField>
-        <FormField label="Profundidade" unit={unit}>
+        <FormField label="Profundidade" unit={unit} tooltip="A profundidade (de trás para frente) da parte superior (Seg A).">
           <input id="la-profundidade" type="number" min={min} step={step} value={aProfundidade}
             onChange={(e) => setAProfundidade(Number(e.target.value))} />
         </FormField>
@@ -189,18 +189,18 @@ export const NewLShapeDialog: React.FC = () => {
         <FormField
           label="Comprimento"
           unit={unit}
-          hint="Medido a partir da borda inferior de A — não inclui a profundidade de A"
+          tooltip="Atenção: Medido a partir da borda inferior de A. Não inclui a profundidade do Seg A!"
         >
           <input id="lb-comprimento" type="number" min={min} step={step} value={bComprimento}
             onChange={(e) => setBComprimento(Number(e.target.value))} />
         </FormField>
-        <FormField label="Profundidade" unit={unit}>
+        <FormField label="Profundidade" unit={unit} tooltip="A largura da perna do L (Seg B).">
           <input id="lb-profundidade" type="number" min={min} step={step} value={bProfundidade}
             onChange={(e) => setBProfundidade(Number(e.target.value))} />
         </FormField>
       </FormSection>
 
-      <FormSection>
+      <FormSection title="Detalhes">
         <FormField label="Espessura" unit="mm">
           <select id="ll-thickness" value={thickness}
             onChange={(e) => setThickness(Number(e.target.value) as 12 | 15 | 20 | 30)}>
@@ -215,12 +215,9 @@ export const NewLShapeDialog: React.FC = () => {
         </FormField>
       </FormSection>
 
-      <div className="form-preview">
-        <span className="form-preview__label">Dimensões totais:</span>
-        <span className="form-preview__value">
-          {aComprimento.toFixed(0)} × {(aProfundidade + bComprimento).toFixed(0)} {unit}
-        </span>
-      </div>
+      <Callout type="info" title="Dimensões Totais">
+        Esta bancada ocupará um espaço total de <strong>{aComprimento.toFixed(0)} × {(aProfundidade + bComprimento).toFixed(0)} {unit}</strong>.
+      </Callout>
 
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>

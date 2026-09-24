@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
@@ -47,8 +47,19 @@ export const NewSinkDialog: React.FC = () => {
         <div className="dialog-warning">⚠ Crie uma bancada ou área molhada antes de adicionar uma cuba.</div>
       )}
 
+      <FormSection title="Dimensões">
+        <FormField label="Largura" unit={unit} tooltip="Tamanho da cuba da esquerda para a direita.">
+          <input id="sink-width" type="number" min={0} step={step} value={width}
+            onChange={(e) => setWidth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Profundidade" unit={unit} tooltip="Tamanho da cuba de trás para frente.">
+          <input id="sink-depth" type="number" min={0} step={step} value={depth}
+            onChange={(e) => setDepth(Number(e.target.value))} />
+        </FormField>
+      </FormSection>
+
       <FormSection title="Local">
-        <FormField label="Pai (Bancada/Área Molhada)">
+        <FormField label="Elemento Pai" tooltip="Selecione a bancada ou área molhada onde a cuba será instalada.">
           <select id="sink-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
             {parents.map((p) => (
@@ -58,16 +69,6 @@ export const NewSinkDialog: React.FC = () => {
         </FormField>
       </FormSection>
 
-      <FormSection title="Cuba">
-        <FormField label="Largura" unit={unit}>
-          <input id="sink-width" type="number" min={0} step={step} value={width}
-            onChange={(e) => setWidth(Number(e.target.value))} />
-        </FormField>
-        <FormField label="Profundidade" unit={unit}>
-          <input id="sink-depth" type="number" min={0} step={step} value={depth}
-            onChange={(e) => setDepth(Number(e.target.value))} />
-        </FormField>
-      </FormSection>
 
 
 
@@ -82,7 +83,9 @@ export const NewSinkDialog: React.FC = () => {
         </FormField>
       </FormSection>
 
-      <div className="form-hint">⚠ Confirme o recorte no gabarito do fabricante antes da fabricação.</div>
+      <Callout type="warning" title="Atenção">
+        Confirme o recorte no gabarito do fabricante antes da fabricação para evitar perdas de material.
+      </Callout>
 
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>

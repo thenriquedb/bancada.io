@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
@@ -38,8 +38,14 @@ export const NewFaucetDialog: React.FC = () => {
 
   return (
     <Modal title="Novo Furo de Torneira" onClose={() => store.setOpenDialog(null)}>
-      <FormSection>
-        <FormField label="Bancada">
+      <FormSection title="Dimensões">
+        <FormField label="Diâmetro do furo" unit={unit} tooltip="O diâmetro do furo necessário para passar a torneira.">
+          <input id="faucet-diameter" type="number" min={0} step={step} value={diameter}
+            onChange={(e) => setDiameter(Number(e.target.value))} />
+        </FormField>
+      </FormSection>
+      <FormSection title="Local">
+        <FormField label="Elemento Pai" tooltip="Onde o furo será feito.">
           <select id="faucet-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
             {parents.map((ct) => (
@@ -47,21 +53,20 @@ export const NewFaucetDialog: React.FC = () => {
             ))}
           </select>
         </FormField>
-        <FormField label="Diâmetro" unit={unit}>
-          <input id="faucet-diameter" type="number" min={0} step={step} value={diameter}
-            onChange={(e) => setDiameter(Number(e.target.value))} />
-        </FormField>
       </FormSection>
       <FormSection title={`Posição a partir da borda (${unit})`}>
-        <FormField label="X" unit={unit}>
+        <FormField label="Dist. esquerda X" unit={unit}>
           <input id="faucet-pos-x" type="number" min={0} step={step} value={posX}
             onChange={(e) => setPosX(Number(e.target.value))} />
         </FormField>
-        <FormField label="Y" unit={unit}>
+        <FormField label="Dist. superior Y" unit={unit}>
           <input id="faucet-pos-y" type="number" min={0} step={step} value={posY}
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>
       </FormSection>
+      <Callout type="info">
+        Dica: O furo pode ser posicionado livremente arrastando no Canvas após a inserção.
+      </Callout>
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
         <BtnPrimary id="create-faucet-btn" onClick={handleCreate} disabled={!parentId}>

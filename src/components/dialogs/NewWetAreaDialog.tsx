@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary } from '../Modal.tsx'
+import { Modal, FormField, FormSection, FormActions, BtnPrimary, BtnSecondary, Callout } from '../Modal.tsx'
 import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
@@ -42,28 +42,28 @@ export const NewWetAreaDialog: React.FC = () => {
 
   return (
     <Modal title="Nova Área Molhada" onClose={() => store.setOpenDialog(null)}>
-      <FormSection title="Bancada">
-        <FormField label="Bancada">
+      <FormSection title="Dimensões">
+        <FormField label="Largura" unit={unit} tooltip="A largura total da área com rebaixo.">
+          <input id="wa-width" type="number" min={0} step={step} value={width}
+            onChange={(e) => setWidth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Profundidade" unit={unit} tooltip="A profundidade total da área molhada.">
+          <input id="wa-depth" type="number" min={0} step={step} value={depth}
+            onChange={(e) => setDepth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Rebaixo" unit="mm" hint="Profundidade do rebaixo (desnível)" tooltip="A quantos milímetros a área molhada afunda em relação ao resto da bancada.">
+          <input id="wa-recess" type="number" min={1} max={20} step={0.5} value={recess}
+            onChange={(e) => setRecess(Number(e.target.value))} />
+        </FormField>
+      </FormSection>
+      <FormSection title="Local">
+        <FormField label="Elemento Pai" tooltip="A qual bancada esta área molhada pertence.">
           <select id="wa-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Nenhuma (Solta no ambiente)</option>
             {countertops.map((ct) => (
               <option key={ct.id} value={ct.id}>{ct.label ?? `Bancada (${ct.geometry.type})`}</option>
             ))}
           </select>
-        </FormField>
-      </FormSection>
-      <FormSection>
-        <FormField label="Largura" unit={unit}>
-          <input id="wa-width" type="number" min={0} step={step} value={width}
-            onChange={(e) => setWidth(Number(e.target.value))} />
-        </FormField>
-        <FormField label="Profundidade" unit={unit}>
-          <input id="wa-depth" type="number" min={0} step={step} value={depth}
-            onChange={(e) => setDepth(Number(e.target.value))} />
-        </FormField>
-        <FormField label="Rebaixo" unit="mm" hint="Profundidade do rebaixo">
-          <input id="wa-recess" type="number" min={1} max={20} step={0.5} value={recess}
-            onChange={(e) => setRecess(Number(e.target.value))} />
         </FormField>
       </FormSection>
       <FormSection title={`Posição a partir da borda (${unit})`}>
@@ -76,6 +76,11 @@ export const NewWetAreaDialog: React.FC = () => {
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>
       </FormSection>
+
+      <Callout type="info">
+        Dica: Elementos adicionados dentro desta área estarão confinados aos limites dela.
+      </Callout>
+
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
         <BtnPrimary id="create-wet-area-btn" onClick={handleCreate}>

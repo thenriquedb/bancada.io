@@ -47,7 +47,12 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, children, width = 
       >
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Fechar">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Fechar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div className="modal-body">{children}</div>
       </div>
@@ -63,11 +68,20 @@ type FormFieldProps = {
   unit?: string
   children: React.ReactNode
   hint?: string
+  tooltip?: string
 }
 
-export const FormField: React.FC<FormFieldProps> = ({ label, unit, children, hint }) => (
+export const FormField: React.FC<FormFieldProps> = ({ label, unit, children, hint, tooltip }) => (
   <div className="form-field">
-    <label className="form-field__label">{label}</label>
+    <div className="form-field__label-row">
+      <label className="form-field__label">{label}</label>
+      {tooltip && (
+        <div className="form-field__tooltip-wrapper">
+          <span className="form-field__info-icon">?</span>
+          <div className="form-field__tooltip">{tooltip}</div>
+        </div>
+      )}
+    </div>
     <div className="form-field__row">
       {children}
       {unit && <span className="form-field__unit">{unit}</span>}
@@ -87,6 +101,19 @@ export const FormSection: React.FC<FormSectionProps> = ({ title, children }) => 
 type FormActionsProps = { children: React.ReactNode }
 export const FormActions: React.FC<FormActionsProps> = ({ children }) => (
   <div className="form-actions">{children}</div>
+)
+
+type CalloutProps = {
+  title?: string
+  children: React.ReactNode
+  type?: 'info' | 'warning'
+}
+
+export const Callout: React.FC<CalloutProps> = ({ title, children, type = 'info' }) => (
+  <div className={`form-callout form-callout--${type}`}>
+    {title && <div className="form-callout__title">{title}</div>}
+    <div className="form-callout__content">{children}</div>
+  </div>
 )
 
 export const BtnPrimary: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...props }) => (
