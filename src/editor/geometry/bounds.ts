@@ -99,8 +99,18 @@ export function clampRectToBounds(child: Rect, parent: Rect): Rect {
   // Clamp position so it doesn't cross boundaries
   let cx = Math.max(parent.x, Math.min(child.x, parent.x + parent.width - cw))
   let cy = Math.max(parent.y, Math.min(child.y, parent.y + parent.height - ch))
-
+  
   return { x: cx, y: cy, width: cw, height: ch }
+}
+
+/**
+ * Checks if the center of element `child` is completely inside the bounds of `parent`.
+ */
+export function isInsideBounds(childBounds: Rect, parentBounds: Rect): boolean {
+  const cx = childBounds.x + childBounds.width / 2
+  const cy = childBounds.y + childBounds.height / 2
+  return cx >= parentBounds.x && cx <= parentBounds.x + parentBounds.width &&
+         cy >= parentBounds.y && cy <= parentBounds.y + parentBounds.height
 }
 
 /**

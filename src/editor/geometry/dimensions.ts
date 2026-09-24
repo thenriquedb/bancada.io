@@ -1,4 +1,4 @@
-import type { ProjectElement, CountertopElement, Point, Unit } from '../../models/types.ts'
+import type { ProjectElement, CountertopElement, WetAreaElement, CountertopGeometry, Point, Unit } from '../../models/types.ts'
 import { getElementBounds } from './bounds.ts'
 import { fromMm } from '../../utils/units.ts'
 
@@ -32,128 +32,146 @@ const DIM_OFFSET_SECONDARY = -40   // mm for secondary dims
  * Labels are formatted in the user's chosen unit.
  */
 export function generateAutoDimensions(
-  countertop: CountertopElement,
+  parent: CountertopElement | WetAreaElement,
   children: ProjectElement[],
   unit: Unit = 'cm'
 ): AutoDimension[] {
   const dims: AutoDimension[] = []
-  const pos = countertop.position
-  const g   = countertop.geometry
+  const pos = parent.position
+  
+  let pW = 0, pH = 0
+  let isLShape = false
+  let g: CountertopGeometry | undefined
+  
+  if (parent.type === 'countertop') {
+    g = parent.geometry
+    pW = g.type === 'reta' ? g.width : g.segmentA.width
+    pH = g.type === 'reta' ? g.depth : g.segmentA.depth + g.segmentB.depth
+    isLShape = g.type === 'l-shape'
+  } else {
+    pW = parent.width
+    pH = parent.depth
+  }
 
-  const ctW = g.type === 'reta' ? g.width  : g.segmentA.width
-  const ctH = g.type === 'reta' ? g.depth  : g.segmentA.depth + g.segmentB.depth
-
-  // ── Overall width (Segment A comprimento) ────────────────────────────────
-  dims.push({
-    id: `dim-${countertop.id}-width`,
-    orientation: 'horizontal',
-    startPoint: { x: pos.x, y: pos.y },
-    endPoint:   { x: pos.x + ctW, y: pos.y },
-    offset: DIM_OFFSET_PRIMARY,
-    value: ctW,
-    label: fmt(ctW, unit),
-  })
-
-  // ── Overall height ───────────────────────────────────────────────────────
-  dims.push({
-    id: `dim-${countertop.id}-depth`,
-    orientation: 'vertical',
-    startPoint: { x: pos.x + ctW, y: pos.y },
-    endPoint:   { x: pos.x + ctW, y: pos.y + ctH },
-    offset: 70,
-    value: ctH,
-    label: fmt(ctH, unit),
-  })
-
-  // ── L-shape segment dims ─────────────────────────────────────────────────
-  if (g.type === 'l-shape') {
-    const { segmentA: sA, segmentB: sB } = g
-
-    // Segment A depth (profundidade)
+  // Only draw overall dimensions if it's a countertop
+  if (parent.type === 'countertop' && parent.dimSelf !== false) {
+    // ── Overall width (Segment A comprimento) ────────────────────────────────
     dims.push({
-      id: `dim-${countertop.id}-sA-depth`,
-      orientation: 'vertical',
-      startPoint: { x: pos.x + sA.width, y: pos.y },
-      endPoint:   { x: pos.x + sA.width, y: pos.y + sA.depth },
-      offset: 40,
-      value: sA.depth,
-      label: fmt(sA.depth, unit),
-    })
-
-    // Segment B comprimento (vertical extent below A)
-    dims.push({
-      id: `dim-${countertop.id}-sB-length`,
-      orientation: 'vertical',
-      startPoint: { x: pos.x + sB.width, y: pos.y + sA.depth },
-      endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
-      offset: 40,
-      value: sB.depth,
-      label: fmt(sB.depth, unit),
-    })
-
-    // Segment B profundidade (horizontal width of B column)
-    dims.push({
-      id: `dim-${countertop.id}-sB-width`,
+      id: `dim-${parent.id}-width`,
       orientation: 'horizontal',
-      startPoint: { x: pos.x, y: pos.y + sA.depth + sB.depth },
-      endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
-      offset: 40,
-      value: sB.width,
-      label: fmt(sB.width, unit),
+      startPoint: { x: pos.x, y: pos.y },
+      endPoint:   { x: pos.x + pW, y: pos.y },
+      offset: DIM_OFFSET_PRIMARY,
+      value: pW,
+      label: fmt(pW, unit),
     })
+
+    // ── Overall height ───────────────────────────────────────────────────────
+    dims.push({
+      id: `dim-${parent.id}-depth`,
+      orientation: 'vertical',
+      startPoint: { x: pos.x + pW, y: pos.y },
+      endPoint:   { x: pos.x + pW, y: pos.y + pH },
+      offset: 70,
+      value: pH,
+      label: fmt(pH, unit),
+    })
+
+    // ── L-shape segment dims ─────────────────────────────────────────────────
+    if (g && g.type === 'l-shape') {
+      const { segmentA: sA, segmentB: sB } = g
+
+      // Segment A depth (profundidade)
+      dims.push({
+        id: `dim-${parent.id}-sA-depth`,
+        orientation: 'vertical',
+        startPoint: { x: pos.x + sA.width, y: pos.y },
+        endPoint:   { x: pos.x + sA.width, y: pos.y + sA.depth },
+        offset: 40,
+        value: sA.depth,
+        label: fmt(sA.depth, unit),
+      })
+
+      // Segment B comprimento (vertical extent below A)
+      dims.push({
+        id: `dim-${parent.id}-sB-length`,
+        orientation: 'vertical',
+        startPoint: { x: pos.x + sB.width, y: pos.y + sA.depth },
+        endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
+        offset: 40,
+        value: sB.depth,
+        label: fmt(sB.depth, unit),
+      })
+
+      // Segment B profundidade (horizontal width of B column)
+      dims.push({
+        id: `dim-${parent.id}-sB-width`,
+        orientation: 'horizontal',
+        startPoint: { x: pos.x, y: pos.y + sA.depth + sB.depth },
+        endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
+        offset: 40,
+        value: sB.width,
+        label: fmt(sB.width, unit),
+      })
+    }
   }
 
   // ── Child element position dims ──────────────────────────────────────────
   children.forEach((child) => {
+    // Note: visibility filtering is mostly handled by Canvas.tsx before passing children.
     const bounds = getElementBounds(child)
     if (!bounds) return
+
+    // Dynamic offset based on parent type to avoid overlap when both are drawn
+    const childDimOffset = parent.type === 'countertop' ? DIM_OFFSET_PRIMARY : DIM_OFFSET_SECONDARY
 
     // Distance from left edge of countertop
     const dLeft = bounds.x - pos.x
     if (dLeft > 10) {
       dims.push({
-        id: `dim-${child.id}-left`,
+        id: `dim-${child.id}-left-${parent.id}`,
         orientation: 'horizontal',
         startPoint: { x: pos.x, y: bounds.y + bounds.height / 2 },
         endPoint:   { x: bounds.x, y: bounds.y + bounds.height / 2 },
-        offset: DIM_OFFSET_SECONDARY,
+        offset: childDimOffset,
         value: dLeft,
         label: fmt(dLeft, unit),
       })
     }
 
-    // Child width
-    if (bounds.width > 20) {
+    // Child width (only draw once, tied to direct parent)
+    const isDirect = '_isVisualDirect' in child ? (child as any)._isVisualDirect : ('parentId' in child && (child as any).parentId === parent.id)
+    if (bounds.width > 20 && child.dimSelf !== false && isDirect) {
       dims.push({
         id: `dim-${child.id}-width`,
         orientation: 'horizontal',
         startPoint: { x: bounds.x, y: bounds.y },
         endPoint:   { x: bounds.x + bounds.width, y: bounds.y },
-        offset: DIM_OFFSET_SECONDARY,
+        offset: DIM_OFFSET_SECONDARY, // width can stay secondary since it's only drawn once
         value: bounds.width,
         label: fmt(bounds.width, unit),
       })
     }
 
-    // Distance from top edge of countertop
+    // Distance from top edge of parent
     const dTop = bounds.y - pos.y
-    if (dTop > 10 && dTop < ctH) {
+    if (dTop > 10 && dTop < pH) {
       dims.push({
-        id: `dim-${child.id}-top`,
+        id: `dim-${child.id}-top-${parent.id}`,
         orientation: 'vertical',
         startPoint: { x: bounds.x + bounds.width, y: pos.y },
         endPoint:   { x: bounds.x + bounds.width, y: bounds.y },
-        offset: 40,
+        offset: -childDimOffset, // vertical offsets are typically positive or negative based on side. Using -childDimOffset pushes it right.
         value: dTop,
         label: fmt(dTop, unit),
       })
     }
 
     // Find precise right and bottom edges of parent depending on where the child is
-    let pRight = pos.x + ctW
-    let pBottom = pos.y + ctH
+    let pRight = pos.x + pW
+    let pBottom = pos.y + pH
     
-    if (g.type === 'l-shape') {
+    if (isLShape && g && g.type === 'l-shape') {
       const cx = bounds.x + bounds.width / 2
       const cy = bounds.y + bounds.height / 2
       
@@ -166,15 +184,15 @@ export function generateAutoDimensions(
         : pos.x + g.segmentA.width
     }
 
-    // Distance from right edge of countertop
+    // Distance from right edge of parent
     const dRight = pRight - (bounds.x + bounds.width)
     if (dRight > 10) {
       dims.push({
-        id: `dim-${child.id}-right`,
+        id: `dim-${child.id}-right-${parent.id}`,
         orientation: 'horizontal',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
         endPoint:   { x: pRight, y: bounds.y + bounds.height / 2 },
-        offset: DIM_OFFSET_SECONDARY,
+        offset: childDimOffset,
         value: dRight,
         label: fmt(dRight, unit),
       })
@@ -184,11 +202,11 @@ export function generateAutoDimensions(
     const dBottom = pBottom - (bounds.y + bounds.height)
     if (dBottom > 10) {
       dims.push({
-        id: `dim-${child.id}-bottom`,
+        id: `dim-${child.id}-bottom-${parent.id}`,
         orientation: 'vertical',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
         endPoint:   { x: bounds.x + bounds.width, y: pBottom },
-        offset: 40,
+        offset: -childDimOffset, // push it right
         value: dBottom,
         label: fmt(dBottom, unit),
       })

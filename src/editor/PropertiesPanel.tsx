@@ -17,7 +17,8 @@ import type {
   WetAreaElement,
   BacksplashElement,
 } from '../models/types.ts'
-import { getElementBounds } from './geometry/bounds.ts'
+import { getElementBounds, isInsideBounds } from './geometry/bounds.ts'
+import { getValidParents } from '../utils/elementHelpers.ts'
 
 export const PropertiesPanel: React.FC = () => {
   const selectedIds = useEditorStore(selectSelectedIds)
@@ -130,20 +131,78 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
         <span className="properties-type-tag">{element.type}</span>
       </div>
       <div className="properties-body">
-        {/* Position */}
+        {/* Position & Alignment */}
         <PropGroup title="Posição">
-          <PropField label="X">
-            <input id="ep-x" type="number" step={1} value={Math.round(element.position.x)}
-              onChange={(e) => updatePos('x', e.target.value)} />
-            <span className="prop-unit">{unit}</span>
-          </PropField>
-          <PropField label="Y">
-            <input id="ep-y" type="number" step={1} value={Math.round(element.position.y)}
-              onChange={(e) => updatePos('y', e.target.value)} />
-            <span className="prop-unit">{unit}</span>
-          </PropField>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Alinhamento</span>
+              <AlignmentToolbar element={element} store={store} />
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Coordenadas</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
+                  <span style={{ padding: '6px 8px', color: 'var(--text-3)', fontSize: 12, fontWeight: 600, borderRight: '1px solid var(--border)', userSelect: 'none' }}>X</span>
+                  <input type="number" step={1} value={Math.round(element.position.x)} onChange={(e) => updatePos('x', e.target.value)} 
+                    style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+                </div>
+                <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
+                  <span style={{ padding: '6px 8px', color: 'var(--text-3)', fontSize: 12, fontWeight: 600, borderRight: '1px solid var(--border)', userSelect: 'none' }}>Y</span>
+                  <input type="number" step={1} value={Math.round(element.position.y)} onChange={(e) => updatePos('y', e.target.value)} 
+                    style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, opacity: 0.5, pointerEvents: 'none' }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Rotação</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
+                  <span style={{ padding: '6px 8px', color: 'var(--text-3)', display: 'flex', borderRight: '1px solid var(--border)' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 21H3v-5c0-4.4 3.6-8 8-8h9"/><path d="M17 4l4 4-4 4"/></svg>
+                  </span>
+                  <input type="text" value="0°" readOnly
+                    style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+                </div>
+                <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <button className="align-btn" type="button" style={{ padding: '6px 8px' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18"/><path d="M12 3v18"/><path d="M16 8l-4-4-4 4"/></svg>
+                  </button>
+                  <button className="align-btn" type="button" style={{ padding: '6px 8px', borderLeft: '1px solid var(--border)' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12H3"/><path d="M16 16l-4 4-4-4"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </PropGroup>
         
+        {'parentId' in element && (() => {
+          const parents = getValidParents(store.project.elements)
+          return (
+            <PropGroup title="Vínculo">
+              <PropField label="Elemento Pai">
+                <select 
+                  value={(element as any).parentId} 
+                  onChange={(e) => {
+                    store.pushHistory()
+                    store.updateElement(element.id, { parentId: e.target.value })
+                  }}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                >
+                  <option value="">Selecione...</option>
+                  {parents.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.label ?? (p.type === 'countertop' ? `Bancada (${p.geometry.type})` : 'Área Molhada')}
+                    </option>
+                  ))}
+                </select>
+              </PropField>
+            </PropGroup>
+          )
+        })()}
+
         <AlignmentToolbar element={element} store={store} />
 
         {/* Type-specific */}
@@ -155,6 +214,51 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
         {element.type === 'wet-area'   && <WetAreaProps el={element} unit={unit} store={store} />}
         {element.type === 'backsplash' && <BacksplashProps el={element} unit={unit} store={store} />}
 
+        <PropGroup title="Cotas Visíveis">
+          <PropField label="Dimensões">
+            <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <input type="checkbox"
+                checked={element.dimSelf !== false}
+                onChange={(e) => {
+                  store.pushHistory()
+                  store.updateElement(element.id, { dimSelf: e.target.checked })
+                }} />
+            </div>
+          </PropField>
+          
+          {'parentId' in element && (
+            <PropField label="Ao Pai Direto">
+              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <input type="checkbox"
+                  checked={element.dimParent !== false}
+                  onChange={(e) => {
+                    store.pushHistory()
+                    store.updateElement(element.id, { dimParent: e.target.checked })
+                  }} />
+              </div>
+            </PropField>
+          )}
+
+          {'parentId' in element && (() => {
+            const parent = store.project.elements.find(e => e.id === (element as any).parentId)
+            if (parent?.type === 'wet-area') {
+              return (
+                <PropField label="À Bancada">
+                  <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                    <input type="checkbox"
+                      checked={element.dimRoot === true}
+                      onChange={(e) => {
+                        store.pushHistory()
+                        store.updateElement(element.id, { dimRoot: e.target.checked })
+                      }} />
+                  </div>
+                </PropField>
+              )
+            }
+            return null
+          })()}
+        </PropGroup>
+
         <PropDivider />
         <DeleteBtn ids={[element.id]} />
       </div>
@@ -162,22 +266,32 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
   )
 }
 
-// ─── Alignment Toolbar ────────────────────────────────────────────────────────
-
 const AlignmentToolbar: React.FC<{ element: ProjectElement; store: ReturnType<typeof useEditorStore> }> = ({ element, store }) => {
   if (!('parentId' in element)) return null
   const parentId = (element as any).parentId
   if (!parentId) return null
 
   const handleAlign = (alignment: 'left' | 'center-h' | 'right' | 'top' | 'center-v' | 'bottom') => {
-    const parent = store.project.elements.find((e: ProjectElement) => e.id === parentId)
+    let parent = store.project.elements.find((e: ProjectElement) => e.id === parentId)
     if (!parent) return
-
-    let parentBounds = getElementBounds(parent)
-    if (!parentBounds) return
 
     const childBounds = getElementBounds(element)
     if (!childBounds) return
+
+    // Find visual parent (e.g. wet-area) if the current parent is a countertop
+    if (parent.type === 'countertop') {
+      const wetAreas = store.project.elements.filter((e: ProjectElement) => e.type === 'wet-area' && ('parentId' in e) && e.parentId === parent!.id)
+      for (const wa of wetAreas) {
+        const waBounds = getElementBounds(wa)
+        if (waBounds && isInsideBounds(childBounds, waBounds)) {
+          parent = wa
+          break
+        }
+      }
+    }
+
+    let parentBounds = getElementBounds(parent)
+    if (!parentBounds) return
 
     if (parent.type === 'countertop' && parent.geometry.type === 'l-shape') {
       const g = parent.geometry
@@ -237,27 +351,27 @@ const AlignmentToolbar: React.FC<{ element: ProjectElement; store: ReturnType<ty
   }
 
   return (
-    <div className="alignment-toolbar" style={{ display: 'flex', gap: 4, padding: '4px 0 12px 0' }}>
-      <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)' }}>
-        <button className="align-btn" onClick={() => handleAlign('left')} title="Alinhar à Esquerda" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="2" y1="1" x2="2" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="4" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
+    <div className="alignment-toolbar" style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <button className="align-btn" onClick={() => handleAlign('left')} title="Alinhar à Esquerda" type="button" style={{ flex: 1, padding: '8px 0' }}>
+          <svg width="18" height="18" viewBox="0 0 14 14" stroke="currentColor"><line x1="2" y1="1" x2="2" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="4" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
         </button>
-        <button className="align-btn" onClick={() => handleAlign('center-h')} title="Centralizar Horizontalmente" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="7" y1="1" x2="7" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="5" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
+        <button className="align-btn" onClick={() => handleAlign('center-h')} title="Centralizar Horizontalmente" type="button" style={{ flex: 1, padding: '8px 0', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
+          <svg width="18" height="18" viewBox="0 0 14 14" stroke="currentColor"><line x1="7" y1="1" x2="7" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="5" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
         </button>
-        <button className="align-btn" onClick={() => handleAlign('right')} title="Alinhar à Direita" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="6" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
+        <button className="align-btn" onClick={() => handleAlign('right')} title="Alinhar à Direita" type="button" style={{ flex: 1, padding: '8px 0' }}>
+          <svg width="18" height="18" viewBox="0 0 14 14" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="6" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
         </button>
       </div>
-      <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)' }}>
-        <button className="align-btn" onClick={() => handleAlign('top')} title="Alinhar ao Topo" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="2" x2="13" y2="2" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="4" width="3" height="4" fill="currentColor" stroke="none"/></svg>
+      <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <button className="align-btn" onClick={() => handleAlign('top')} title="Alinhar ao Topo" type="button" style={{ flex: 1, padding: '8px 0' }}>
+          <svg width="18" height="18" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="2" x2="13" y2="2" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="4" width="3" height="4" fill="currentColor" stroke="none"/></svg>
         </button>
-        <button className="align-btn" onClick={() => handleAlign('center-v')} title="Centralizar Verticalmente" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="7" x2="13" y2="7" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="5" width="3" height="4" fill="currentColor" stroke="none"/></svg>
+        <button className="align-btn" onClick={() => handleAlign('center-v')} title="Centralizar Verticalmente" type="button" style={{ flex: 1, padding: '8px 0', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
+          <svg width="18" height="18" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="7" x2="13" y2="7" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="5" width="3" height="4" fill="currentColor" stroke="none"/></svg>
         </button>
-        <button className="align-btn" onClick={() => handleAlign('bottom')} title="Alinhar à Base" type="button">
-          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="12" x2="13" y2="12" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="6" width="3" height="4" fill="currentColor" stroke="none"/></svg>
+        <button className="align-btn" onClick={() => handleAlign('bottom')} title="Alinhar à Base" type="button" style={{ flex: 1, padding: '8px 0' }}>
+          <svg width="18" height="18" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="12" x2="13" y2="12" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="6" width="3" height="4" fill="currentColor" stroke="none"/></svg>
         </button>
       </div>
     </div>

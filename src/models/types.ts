@@ -55,6 +55,9 @@ export type BaseElement = {
   position: Point
   locked: boolean
   visible: boolean
+  dimSelf?: boolean
+  dimParent?: boolean
+  dimRoot?: boolean
   label?: string
 }
 

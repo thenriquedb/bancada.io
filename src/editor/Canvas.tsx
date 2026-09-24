@@ -10,7 +10,7 @@ import {
 } from '../store/editorStore.ts'
 import { screenToWorld, rectFromPoints } from './geometry/coordinates.ts'
 import { snapPoint } from './snapping/snapping.ts'
-import { getElementBounds, clampChildToParent, getChildrenBounds } from './geometry/bounds.ts'
+import { getElementBounds, clampChildToParent, getChildrenBounds, isInsideBounds } from './geometry/bounds.ts'
 import { getLHandles, hitTestLHandle, applyLResize } from './geometry/lshapeHandles.ts'
 import type { LHandle } from './geometry/lshapeHandles.ts'
 import { Grid } from './rendering/Grid.tsx'
@@ -24,7 +24,7 @@ import { WetAreaRenderer } from './rendering/WetAreaRenderer.tsx'
 import { BacksplashRenderer } from './rendering/BacksplashRenderer.tsx'
 import { DimensionRenderer } from './rendering/DimensionRenderer.tsx'
 import { generateAutoDimensions } from './geometry/dimensions.ts'
-import type { Point, ProjectElement, CountertopElement, ValidationWarning } from '../models/types.ts'
+import type { Point, ProjectElement, CountertopElement, WetAreaElement, ValidationWarning } from '../models/types.ts'
 
 const MIN_ZOOM = 0.04
 const MAX_ZOOM = 12
@@ -514,10 +514,48 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
   const unit = settings.unit
   const autoDimensions = useMemo(() => {
     if (!settings.showDimensions) return []
-    const countertops = elements.filter((el): el is CountertopElement => el.type === 'countertop')
-    return countertops.flatMap((ct) => {
-      const children = elements.filter((el) => 'parentId' in el && (el as { parentId: string }).parentId === ct.id)
-      return generateAutoDimensions(ct, children, unit)
+    const parents = elements.filter((el): el is CountertopElement | WetAreaElement => el.type === 'countertop' || el.type === 'wet-area')
+    
+    return parents.flatMap((parent) => {
+      const children = elements.filter((el) => {
+        if (!('parentId' in el)) return false
+        if (el.type === 'countertop' || el.type === 'wet-area' || el.type === 'backsplash') return false
+
+        const containingWetAreas = parents.filter(p => p.type === 'wet-area' && (() => {
+          const cb = getElementBounds(el);
+          const pb = getElementBounds(p);
+          return cb && pb && isInsideBounds(cb, pb);
+        })())
+        // The visual direct parent is the wet area it is inside, otherwise its actual parent
+        const visualDirectParent = containingWetAreas.length > 0 
+          ? containingWetAreas[0] 
+          : parents.find(p => p.id === (el as any).parentId)
+
+        if (parent.id === visualDirectParent?.id) {
+          return el.dimParent !== false
+        }
+
+        if (parent.type === 'countertop' && containingWetAreas.length > 0) {
+          const rootId = (visualDirectParent as any)?.parentId
+          if (rootId === parent.id) {
+            return el.dimRoot === true
+          }
+        }
+        
+        return false
+      }).map(el => {
+        const containingWetAreas = parents.filter(p => p.type === 'wet-area' && (() => {
+          const cb = getElementBounds(el);
+          const pb = getElementBounds(p);
+          return cb && pb && isInsideBounds(cb, pb);
+        })())
+        const visualDirectParent = containingWetAreas.length > 0 
+          ? containingWetAreas[0] 
+          : parents.find(p => p.id === (el as any).parentId)
+          
+        return { ...el, _isVisualDirect: parent.id === visualDirectParent?.id }
+      })
+      return generateAutoDimensions(parent, children, unit)
     })
   }, [elements, settings.showDimensions, unit])
 
