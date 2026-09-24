@@ -5,11 +5,12 @@ type TrashRendererProps = {
   element: TrashElement
   selected: boolean
   hovered: boolean
+  hasError?: boolean
 }
 
-export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected, hovered }) => {
+export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected, hovered, hasError }) => {
   const { position: pos, shape } = element
-  const stroke = selected ? '#1971c2' : hovered ? '#339af0' : '#666666'
+  const stroke = hasError ? '#ef4444' : selected ? '#1971c2' : hovered ? '#339af0' : '#666666'
   const fill = selected ? '#dbeafe' : hovered ? '#e7f5ff' : '#e8e8e8'
   const strokeW = selected ? 2 : 1.5
 

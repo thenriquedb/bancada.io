@@ -4,13 +4,13 @@ import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
 import type { TrashElement } from '../../models/types.ts'
-import { getCountertops, getDefaultParent } from '../../utils/elementHelpers.ts'
+import { getValidParents, getDefaultParent } from '../../utils/elementHelpers.ts'
 
 export const NewTrashDialog: React.FC = () => {
   const store = useEditorStore()
   const { unit, toMm, fromMm } = useDialogUnit()
-  const countertops = getCountertops(store.project.elements)
-  const defaultCt = getDefaultParent(countertops, store.selectedIds)
+  const parents = getValidParents(store.project.elements)
+  const defaultCt = getDefaultParent(parents, store.selectedIds)
   const step = unit === 'm' ? 0.005 : unit === 'cm' ? 0.5 : 5
 
   const [shape, setShape]       = useState<'circular' | 'retangular'>('circular')
@@ -22,13 +22,13 @@ export const NewTrashDialog: React.FC = () => {
   const [posY, setPosY]         = useState(fromMm(200))
 
   const handleCreate = () => {
-    const ct = countertops.find((c) => c.id === parentId)
+    const parent = parents.find((c) => c.id === parentId)
     const el: TrashElement = {
       id: generateId('trash'),
       type: 'trash',
       position: {
-        x: ct ? ct.position.x + Math.round(toMm(posX)) : Math.round(toMm(posX)),
-        y: ct ? ct.position.y + Math.round(toMm(posY)) : Math.round(toMm(posY)),
+        x: parent ? parent.position.x + Math.round(toMm(posX)) : Math.round(toMm(posX)),
+        y: parent ? parent.position.y + Math.round(toMm(posY)) : Math.round(toMm(posY)),
       },
       locked: false,
       visible: true,
@@ -48,8 +48,8 @@ export const NewTrashDialog: React.FC = () => {
         <FormField label="Bancada">
           <select id="trash-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
-            {countertops.map((ct) => (
-              <option key={ct.id} value={ct.id}>{ct.label ?? `Bancada (${ct.geometry.type})`}</option>
+            {parents.map((ct) => (
+              <option key={ct.id} value={ct.id}>{ct.label ?? (ct.type === 'countertop' ? `Bancada (${ct.geometry.type})` : 'Área Molhada')}</option>
             ))}
           </select>
         </FormField>

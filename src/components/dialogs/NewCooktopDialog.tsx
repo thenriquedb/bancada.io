@@ -4,38 +4,34 @@ import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
 import type { CooktopElement } from '../../models/types.ts'
-import { getCountertops, getDefaultParent } from '../../utils/elementHelpers.ts'
+import { getValidParents, getDefaultParent } from '../../utils/elementHelpers.ts'
 
 export const NewCooktopDialog: React.FC = () => {
   const store = useEditorStore()
   const { unit, toMm, fromMm } = useDialogUnit()
-  const countertops = getCountertops(store.project.elements)
-  const defaultCt = getDefaultParent(countertops, store.selectedIds)
+  const parents = getValidParents(store.project.elements)
+  const defaultCt = getDefaultParent(parents, store.selectedIds)
   const step = unit === 'm' ? 0.005 : unit === 'cm' ? 0.5 : 5
 
   const [width, setWidth]       = useState(fromMm(560))
   const [depth, setDepth]       = useState(fromMm(490))
-  const [cutWidth, setCutWidth] = useState(fromMm(530))
-  const [cutDepth, setCutDepth] = useState(fromMm(460))
   const [parentId, setParentId] = useState(defaultCt?.id ?? '')
   const [posX, setPosX]         = useState(fromMm(500))
   const [posY, setPosY]         = useState(fromMm(80))
 
   const handleCreate = () => {
-    const ct = countertops.find((c) => c.id === parentId)
+    const parent = parents.find((c) => c.id === parentId)
     const el: CooktopElement = {
       id: generateId('cooktop'),
       type: 'cooktop',
       position: {
-        x: ct ? ct.position.x + Math.round(toMm(posX)) : Math.round(toMm(posX)),
-        y: ct ? ct.position.y + Math.round(toMm(posY)) : Math.round(toMm(posY)),
+        x: parent ? parent.position.x + Math.round(toMm(posX)) : Math.round(toMm(posX)),
+        y: parent ? parent.position.y + Math.round(toMm(posY)) : Math.round(toMm(posY)),
       },
       locked: false,
       visible: true,
       width:    Math.round(toMm(width)),
       depth:    Math.round(toMm(depth)),
-      cutWidth: Math.round(toMm(cutWidth)),
-      cutDepth: Math.round(toMm(cutDepth)),
       parentId,
     }
     store.addElement(el)
@@ -44,15 +40,15 @@ export const NewCooktopDialog: React.FC = () => {
 
   return (
     <Modal title="Novo Cooktop" onClose={() => store.setOpenDialog(null)}>
-      {countertops.length === 0 && (
+      {parents.length === 0 && (
         <div className="dialog-warning">⚠ Crie uma bancada antes de adicionar um cooktop.</div>
       )}
       <FormSection title="Bancada">
         <FormField label="Bancada">
           <select id="ct-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
-            {countertops.map((ct) => (
-              <option key={ct.id} value={ct.id}>{ct.label ?? `Bancada (${ct.geometry.type})`}</option>
+            {parents.map((ct) => (
+              <option key={ct.id} value={ct.id}>{ct.label ?? (ct.type === 'countertop' ? `Local (${ct.geometry.type})` : 'Área Molhada')}</option>
             ))}
           </select>
         </FormField>
@@ -67,16 +63,7 @@ export const NewCooktopDialog: React.FC = () => {
             onChange={(e) => setDepth(Number(e.target.value))} />
         </FormField>
       </FormSection>
-      <FormSection title="Recorte">
-        <FormField label="Largura" unit={unit}>
-          <input id="cooktop-cut-width" type="number" min={0} step={step} value={cutWidth}
-            onChange={(e) => setCutWidth(Number(e.target.value))} />
-        </FormField>
-        <FormField label="Profundidade" unit={unit}>
-          <input id="cooktop-cut-depth" type="number" min={0} step={step} value={cutDepth}
-            onChange={(e) => setCutDepth(Number(e.target.value))} />
-        </FormField>
-      </FormSection>
+
       <FormSection title={`Posição a partir da borda (${unit})`}>
         <FormField label="X" unit={unit}>
           <input id="cooktop-pos-x" type="number" min={0} step={step} value={posX}

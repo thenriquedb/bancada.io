@@ -34,7 +34,7 @@ export const NewWetAreaDialog: React.FC = () => {
       width:  Math.round(toMm(width)),
       depth:  Math.round(toMm(depth)),
       recess, // rebaixo always in mm
-      parentId,
+      parentId: parentId || undefined,
     }
     store.addElement(el)
     store.setOpenDialog(null)
@@ -45,7 +45,7 @@ export const NewWetAreaDialog: React.FC = () => {
       <FormSection title="Bancada">
         <FormField label="Bancada">
           <select id="wa-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
-            <option value="">Selecione...</option>
+            <option value="">Nenhuma (Solta no ambiente)</option>
             {countertops.map((ct) => (
               <option key={ct.id} value={ct.id}>{ct.label ?? `Bancada (${ct.geometry.type})`}</option>
             ))}
@@ -78,7 +78,7 @@ export const NewWetAreaDialog: React.FC = () => {
       </FormSection>
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
-        <BtnPrimary id="create-wet-area-btn" onClick={handleCreate} disabled={!parentId}>
+        <BtnPrimary id="create-wet-area-btn" onClick={handleCreate}>
           Adicionar área molhada
         </BtnPrimary>
       </FormActions>

@@ -1,32 +1,42 @@
-import type { CountertopElement, ProjectElement } from '../models/types.ts'
+import type { CountertopElement, ProjectElement, WetAreaElement } from '../models/types.ts'
 
-/** Return all countertop elements from a list */
+export type ValidParent = CountertopElement | WetAreaElement
+
+/** Return all countertop elements */
 export function getCountertops(elements: ProjectElement[]): CountertopElement[] {
   return elements.filter((el): el is CountertopElement => el.type === 'countertop')
 }
 
-/** Pick the best default parent:
- *  1. Selected countertop
- *  2. First countertop
- */
-export function getDefaultParent(
-  countertops: CountertopElement[],
-  selectedIds: string[]
-): CountertopElement | undefined {
-  const selected = countertops.find((ct) => selectedIds.includes(ct.id))
-  return selected ?? countertops[0]
+/** Return all valid parents (countertops and wet areas) */
+export function getValidParents(elements: ProjectElement[]): ValidParent[] {
+  return elements.filter((el): el is ValidParent => el.type === 'countertop' || el.type === 'wet-area')
 }
 
-/** Return the world-space center position to center a child element on a countertop */
-export function centerInCountertop(
-  ct: CountertopElement,
+/** Pick the best default parent */
+export function getDefaultParent(
+  parents: ValidParent[],
+  selectedIds: string[]
+): ValidParent | undefined {
+  const selected = parents.find((p) => selectedIds.includes(p.id))
+  return selected ?? parents[0]
+}
+
+/** Return the world-space center position to center a child element on a parent */
+export function centerInParent(
+  parent: ValidParent,
   childWidth: number,
   childDepth: number
 ): { x: number; y: number } {
-  const ctW = ct.geometry.type === 'reta' ? ct.geometry.width : ct.geometry.segmentA.width
-  const ctD = ct.geometry.type === 'reta' ? ct.geometry.depth : ct.geometry.segmentA.depth
+  let pw = 0, pd = 0
+  if (parent.type === 'countertop') {
+    pw = parent.geometry.type === 'reta' ? parent.geometry.width : parent.geometry.segmentA.width
+    pd = parent.geometry.type === 'reta' ? parent.geometry.depth : parent.geometry.segmentA.depth
+  } else {
+    pw = parent.width
+    pd = parent.depth
+  }
   return {
-    x: ct.position.x + Math.round((ctW - childWidth) / 2),
-    y: ct.position.y + Math.round((ctD - childDepth) / 2),
+    x: parent.position.x + Math.round((pw - childWidth) / 2),
+    y: parent.position.y + Math.round((pd - childDepth) / 2),
   }
 }

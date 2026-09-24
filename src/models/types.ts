@@ -51,12 +51,6 @@ export type EdgeFinishes = {
   right: EdgeFinish
 }
 
-// ─── Sink ───────────────────────────────────────────────────────────────────
-
-export type SinkType = 'embutir' | 'sobrepor' | 'undermount' | 'esculpida' | 'personalizada'
-
-export type CutShape = 'retangular' | 'arredondado' | 'personalizado'
-
 // ─── Countertop geometry ─────────────────────────────────────────────────────
 
 export type CountertopType = 'reta' | 'l-shape' | 'u-shape'
@@ -95,19 +89,13 @@ export type SinkElement = BaseElement & {
   type: 'sink'
   width: number    // mm
   depth: number    // mm
-  cutWidth: number // mm
-  cutDepth: number // mm
-  cutShape: CutShape
-  sinkType: SinkType
-  parentId: string // countertop element id
+  parentId: string // countertop or wet area element id
 }
 
 export type CooktopElement = BaseElement & {
   type: 'cooktop'
   width: number     // mm
   depth: number     // mm
-  cutWidth: number  // mm
-  cutDepth: number  // mm
   parentId: string
 }
 
@@ -131,7 +119,7 @@ export type WetAreaElement = BaseElement & {
   width: number    // mm
   depth: number    // mm
   recess: number   // mm – rebaixo
-  parentId: string
+  parentId?: string
 }
 
 export type BacksplashElement = BaseElement & {

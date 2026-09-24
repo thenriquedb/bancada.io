@@ -65,3 +65,59 @@ export function getGroupBounds(elements: ProjectElement[]): Rect | null {
   if (!any) return null
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
 }
+
+/**
+ * Returns all descendants of a given element recursively.
+ */
+export function getDescendants(elId: string, elements: ProjectElement[]): ProjectElement[] {
+  const children = elements.filter(e => 'parentId' in e && (e as any).parentId === elId)
+  let result = [...children]
+  for (const child of children) {
+    result = result.concat(getDescendants(child.id, elements))
+  }
+  return result
+}
+
+/**
+ * Returns the bounding rect encompassing all descendants of an element.
+ */
+export function getChildrenBounds(elId: string, elements: ProjectElement[]): Rect | null {
+  const descendants = getDescendants(elId, elements)
+  if (descendants.length === 0) return null
+  return getGroupBounds(descendants)
+}
+
+/**
+ * Clamps a child rect so it doesn't exceed the parent rect boundaries.
+ * Keeps the child size intact if possible, or shrinks it if it exceeds parent size.
+ */
+export function clampRectToBounds(child: Rect, parent: Rect): Rect {
+  // Clamp size first so it fits inside
+  let cw = Math.min(child.width, parent.width)
+  let ch = Math.min(child.height, parent.height)
+  
+  // Clamp position so it doesn't cross boundaries
+  let cx = Math.max(parent.x, Math.min(child.x, parent.x + parent.width - cw))
+  let cy = Math.max(parent.y, Math.min(child.y, parent.y + parent.height - ch))
+
+  return { x: cx, y: cy, width: cw, height: ch }
+}
+
+/**
+ * Returns the bounds of the given element constrained to its parent's bounds.
+ */
+export function clampChildToParent(childEl: ProjectElement, elements: ProjectElement[]): Rect | null {
+  const childBounds = getElementBounds(childEl)
+  if (!childBounds || !('parentId' in childEl) || !(childEl as any).parentId) return childBounds
+
+  const parentId = (childEl as any).parentId
+  const parentEl = elements.find(el => el.id === parentId)
+  if (!parentEl) return childBounds
+
+  const parentBounds = getElementBounds(parentEl)
+  if (!parentBounds) return childBounds
+
+  // For L-shape we clamp to the overall bounding box for simplicity, 
+  // but it guarantees it won't exceed the outer limits.
+  return clampRectToBounds(childBounds, parentBounds)
+}

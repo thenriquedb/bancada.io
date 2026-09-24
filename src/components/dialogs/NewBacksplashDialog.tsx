@@ -4,13 +4,13 @@ import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
 import type { BacksplashElement } from '../../models/types.ts'
-import { getCountertops, getDefaultParent } from '../../utils/elementHelpers.ts'
+import { getValidParents, getDefaultParent } from '../../utils/elementHelpers.ts'
 
 export const NewBacksplashDialog: React.FC = () => {
   const store = useEditorStore()
   const { unit, toMm, fromMm } = useDialogUnit()
-  const countertops = getCountertops(store.project.elements)
-  const defaultCt = getDefaultParent(countertops, store.selectedIds)
+  const parents = getValidParents(store.project.elements)
+  const defaultCt = getDefaultParent(parents, store.selectedIds)
   const step = unit === 'm' ? 0.005 : unit === 'cm' ? 0.5 : 5
 
   const [height, setHeight]         = useState(fromMm(100))
@@ -18,19 +18,29 @@ export const NewBacksplashDialog: React.FC = () => {
   const [parentId, setParentId]     = useState(defaultCt?.id ?? '')
 
   const getLength = () => {
-    const ct = countertops.find((c) => c.id === parentId)
-    if (!ct) return 0
-    const mm = ct.geometry.type === 'reta' ? ct.geometry.width : ct.geometry.segmentA.width
+    const p = parents.find((c) => c.id === parentId)
+    if (!p) return 0
+    let mm = 0
+    if (p.type === 'countertop') {
+      mm = p.geometry.type === 'reta' ? p.geometry.width : p.geometry.segmentA.width
+    } else {
+      mm = p.width
+    }
     return fromMm(mm)
   }
 
   const handleCreate = () => {
-    const ct = countertops.find((c) => c.id === parentId)
-    const lengthMm = ct
-      ? (ct.geometry.type === 'reta' ? ct.geometry.width : ct.geometry.segmentA.width)
-      : 1000
-    const py = ct ? ct.position.y - Math.round(toMm(height)) : 0
-    const px = ct ? ct.position.x : 0
+    const p = parents.find((c) => c.id === parentId)
+    let lengthMm = 1000
+    if (p) {
+      if (p.type === 'countertop') {
+        lengthMm = p.geometry.type === 'reta' ? p.geometry.width : p.geometry.segmentA.width
+      } else {
+        lengthMm = p.width
+      }
+    }
+    const py = p ? p.position.y - Math.round(toMm(height)) : 0
+    const px = p ? p.position.x : 0
 
     const el: BacksplashElement = {
       id: generateId('backsplash'),
@@ -51,12 +61,12 @@ export const NewBacksplashDialog: React.FC = () => {
 
   return (
     <Modal title="Nova Rodabanca" onClose={() => store.setOpenDialog(null)}>
-      <FormSection title="Bancada">
-        <FormField label="Bancada" hint="A rodabanca será criada na parte traseira da bancada">
+      <FormSection title="Local">
+        <FormField label="Pai (Bancada/Área Molhada)" hint="A rodabanca será criada na parte traseira">
           <select id="bs-parent" value={parentId} onChange={(e) => setParentId(e.target.value)}>
             <option value="">Selecione...</option>
-            {countertops.map((ct) => (
-              <option key={ct.id} value={ct.id}>{ct.label ?? `Bancada (${ct.geometry.type})`}</option>
+            {parents.map((p) => (
+              <option key={p.id} value={p.id}>{p.label ?? (p.type === 'countertop' ? `Bancada (${p.geometry.type})` : 'Área Molhada')}</option>
             ))}
           </select>
         </FormField>

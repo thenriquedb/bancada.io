@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Toolbar } from './Toolbar.tsx'
 import { ElementPalette } from './ElementPalette.tsx'
 import { Canvas } from './Canvas.tsx'
-import { PropertiesPanel } from './PropertiesPanel.tsx'
+import { RightSidebar } from './RightSidebar.tsx'
 import { StatusBar } from './StatusBar.tsx'
 import { useKeyboard } from './interactions/keyboard.ts'
 import { useEditorStore, selectOpenDialog, selectElements, selectSettings } from '../store/editorStore.ts'
@@ -117,11 +117,11 @@ export const Editor: React.FC = () => {
         <ElementPalette />
 
         <div ref={containerRef} className="canvas-container">
-          <Canvas />
+          <Canvas warnings={warnings} />
           {warnings.length > 0 && <ValidationWarnings warnings={warnings} />}
         </div>
 
-        <PropertiesPanel />
+        <RightSidebar />
       </div>
 
       <StatusBar />

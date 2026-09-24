@@ -10,7 +10,7 @@ import {
 } from '../store/editorStore.ts'
 import { screenToWorld, rectFromPoints } from './geometry/coordinates.ts'
 import { snapPoint } from './snapping/snapping.ts'
-import { getElementBounds } from './geometry/bounds.ts'
+import { getElementBounds, clampChildToParent, getChildrenBounds } from './geometry/bounds.ts'
 import { getLHandles, hitTestLHandle, applyLResize } from './geometry/lshapeHandles.ts'
 import type { LHandle } from './geometry/lshapeHandles.ts'
 import { Grid } from './rendering/Grid.tsx'
@@ -24,7 +24,7 @@ import { WetAreaRenderer } from './rendering/WetAreaRenderer.tsx'
 import { BacksplashRenderer } from './rendering/BacksplashRenderer.tsx'
 import { DimensionRenderer } from './rendering/DimensionRenderer.tsx'
 import { generateAutoDimensions } from './geometry/dimensions.ts'
-import type { Point, ProjectElement, CountertopElement } from '../models/types.ts'
+import type { Point, ProjectElement, CountertopElement, ValidationWarning } from '../models/types.ts'
 
 const MIN_ZOOM = 0.04
 const MAX_ZOOM = 12
@@ -126,12 +126,63 @@ function applyResize(
   dx: number,
   dy: number,
   store: ReturnType<typeof useEditorStore>,
+  elements: ProjectElement[],
   originalLGeo?: { px: number; py: number; aW: number; aD: number; bW: number; bD: number },
 ) {
+  let actualDx = dx
+  let actualDy = dy
+
+  // Constrain resize so parent doesn't shrink past its children
+  const cBounds = getChildrenBounds(el.id, elements)
+  if (cBounds) {
+    if (handle.includes('e')) {
+      const minDx = (cBounds.x + cBounds.width) - (ob.x + ob.width)
+      actualDx = Math.max(actualDx, minDx)
+    }
+    if (handle.includes('w')) {
+      const maxDx = cBounds.x - ob.x
+      actualDx = Math.min(actualDx, maxDx)
+    }
+    if (handle.includes('s')) {
+      const minDy = (cBounds.y + cBounds.height) - (ob.y + ob.height)
+      actualDy = Math.max(actualDy, minDy)
+    }
+    if (handle.includes('n')) {
+      const maxDy = cBounds.y - ob.y
+      actualDy = Math.min(actualDy, maxDy)
+    }
+  }
+
+  // Clamp dx and dy to parent bounds if it is a child
+  if ('parentId' in el && (el as any).parentId) {
+    const parent = elements.find(p => p.id === (el as any).parentId)
+    if (parent) {
+      const pBounds = getElementBounds(parent)
+      if (pBounds) {
+        if (handle.includes('e')) {
+          const maxDx = pBounds.x + pBounds.width - (ob.x + ob.width)
+          actualDx = Math.min(actualDx, maxDx)
+        }
+        if (handle.includes('w')) {
+          const minDx = pBounds.x - ob.x
+          actualDx = Math.max(actualDx, minDx)
+        }
+        if (handle.includes('s')) {
+          const maxDy = pBounds.y + pBounds.height - (ob.y + ob.height)
+          actualDy = Math.min(actualDy, maxDy)
+        }
+        if (handle.includes('n')) {
+          const minDy = pBounds.y - ob.y
+          actualDy = Math.max(actualDy, minDy)
+        }
+      }
+    }
+  }
+
   // ── L-shape: use ORIGINAL geometry captured at drag start ────────────────
   if (el.type === 'countertop' && (el as CountertopElement).geometry.type === 'l-shape') {
     if (!originalLGeo) return  // safety guard
-    const result = applyLResize(handle as LHandle, originalLGeo, dx, dy, MIN_DIM)
+    const result = applyLResize(handle as LHandle, originalLGeo, actualDx, actualDy, MIN_DIM)
     store.updateElement(el.id, {
       position: { x: result.px, y: result.py },
       geometry: {
@@ -143,13 +194,12 @@ function applyResize(
     return
   }
 
-  // ── Standard bounding-box resize ──────────────────────────────────────
   let nx = ob.x, ny = ob.y, nw = ob.width, nh = ob.height
 
-  if (handle.includes('e'))  nw = Math.max(MIN_DIM, ob.width  + dx)
-  if (handle.includes('s'))  nh = Math.max(MIN_DIM, ob.height + dy)
-  if (handle.includes('w')) { nx = ob.x + dx; nw = Math.max(MIN_DIM, ob.width  - dx) }
-  if (handle.includes('n')) { ny = ob.y + dy; nh = Math.max(MIN_DIM, ob.height - dy) }
+  if (handle.includes('e'))  nw = Math.max(MIN_DIM, ob.width  + actualDx)
+  if (handle.includes('s'))  nh = Math.max(MIN_DIM, ob.height + actualDy)
+  if (handle.includes('w')) { nx = ob.x + actualDx; nw = Math.max(MIN_DIM, ob.width  - actualDx) }
+  if (handle.includes('n')) { ny = ob.y + actualDy; nh = Math.max(MIN_DIM, ob.height - actualDy) }
 
   nx = Math.round(nx); ny = Math.round(ny)
   nw = Math.round(nw); nh = Math.round(nh)
@@ -180,7 +230,11 @@ function applyResize(
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 
-export const Canvas: React.FC = () => {
+type CanvasProps = {
+  warnings?: ValidationWarning[]
+}
+
+export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
   const svgRef  = useRef<SVGSVGElement>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [drag, setDrag] = useState<DragState>({ type: 'none' })
@@ -346,7 +400,23 @@ export const Canvas: React.FC = () => {
         const dx = snapped.x - drag.startWorld.x
         const dy = snapped.y - drag.startWorld.y
         drag.originalPositions.forEach((orig, id) => {
-          store.updateElement(id, { position: { x: orig.x + dx, y: orig.y + dy } })
+          const el = elements.find(e => e.id === id)
+          if (!el) return
+          let nx = orig.x + dx
+          let ny = orig.y + dy
+
+          // Clamp to parent bounds if it is a child
+          if ('parentId' in el && (el as any).parentId) {
+            const parent = elements.find(p => p.id === (el as any).parentId)
+            const pBounds = parent ? getElementBounds(parent) : null
+            const eBounds = getElementBounds(el)
+            if (pBounds && eBounds) {
+               nx = Math.max(pBounds.x, Math.min(nx, pBounds.x + pBounds.width - eBounds.width))
+               ny = Math.max(pBounds.y, Math.min(ny, pBounds.y + pBounds.height - eBounds.height))
+            }
+          }
+
+          store.updateElement(id, { position: { x: nx, y: ny } })
         })
         return
       }
@@ -355,7 +425,7 @@ export const Canvas: React.FC = () => {
         const dx = snapped.x - drag.startWorld.x
         const dy = snapped.y - drag.startWorld.y
         const el = elements.find((el) => el.id === drag.elementId)
-        if (el) applyResize(el, drag.handle, drag.originalBounds, dx, dy, store, drag.originalLGeo)
+        if (el) applyResize(el, drag.handle, drag.originalBounds, dx, dy, store, elements, drag.originalLGeo)
         return
       }
 
@@ -490,14 +560,18 @@ export const Canvas: React.FC = () => {
         )}
 
         {/* All elements */}
-        {elements.map((el: ProjectElement) => (
-          <ElementRenderer
-            key={el.id}
-            element={el}
-            selected={selectedIds.includes(el.id)}
-            hovered={hoveredId === el.id}
-          />
-        ))}
+        {elements.map((el: ProjectElement) => {
+          const hasError = warnings.some(w => w.type === 'elements-overlapping' && w.elementIds.includes(el.id))
+          return (
+            <ElementRenderer
+              key={el.id}
+              element={el}
+              selected={selectedIds.includes(el.id)}
+              hovered={hoveredId === el.id}
+              hasError={hasError}
+            />
+          )
+        })}
 
         {/* Auto-dimensions */}
         {autoDimensions.length > 0 && (
@@ -562,22 +636,23 @@ type ElementRendererProps = {
   element:  ProjectElement
   selected: boolean
   hovered:  boolean
+  hasError: boolean
 }
 
-const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, hovered }) => {
+const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, hovered, hasError }) => {
   if (!element.visible) return null
 
   switch (element.type) {
     case 'countertop':
       return <CountertopRenderer element={element} selected={selected} hovered={hovered} />
     case 'sink':
-      return <SinkRenderer element={element} selected={selected} hovered={hovered} />
+      return <SinkRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
     case 'cooktop':
-      return <CooktopRenderer element={element} selected={selected} hovered={hovered} />
+      return <CooktopRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
     case 'faucet':
-      return <FaucetRenderer element={element} selected={selected} hovered={hovered} />
+      return <FaucetRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
     case 'trash':
-      return <TrashRenderer element={element} selected={selected} hovered={hovered} />
+      return <TrashRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
     case 'wet-area':
       return <WetAreaRenderer element={element} selected={selected} hovered={hovered} />
     case 'backsplash':

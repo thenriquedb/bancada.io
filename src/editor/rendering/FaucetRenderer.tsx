@@ -5,12 +5,13 @@ type FaucetRendererProps = {
   element: FaucetElement
   selected: boolean
   hovered: boolean
+  hasError?: boolean
 }
 
-export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selected, hovered }) => {
+export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selected, hovered, hasError }) => {
   const { position: pos, diameter } = element
   const r = diameter / 2
-  const stroke = selected ? '#1971c2' : hovered ? '#339af0' : '#555555'
+  const stroke = hasError ? '#ef4444' : selected ? '#1971c2' : hovered ? '#339af0' : '#555555'
   const fill = selected ? '#dbeafe' : hovered ? '#e7f5ff' : '#e0e0e0'
 
   return (
