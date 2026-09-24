@@ -65,6 +65,7 @@ type EditorActions = {
   // Elements
   addElement: (element: ProjectElement) => void
   updateElement: (id: string, patch: Partial<ProjectElement>) => void
+  updateElements: (updates: { id: string; patch: Partial<ProjectElement> }[]) => void
   removeElement: (id: string) => void
   removeElements: (ids: string[]) => void
   duplicateElements: (ids: string[]) => void
@@ -193,6 +194,22 @@ export const useEditorStore = create<EditorStore>()(
         },
         isDirty: true,
       })),
+
+    updateElements: (updates) =>
+      set((s) => {
+        const updateMap = new Map(updates.map(u => [u.id, u.patch]))
+        return {
+          project: {
+            ...s.project,
+            elements: s.project.elements.map((el) => {
+              const patch = updateMap.get(el.id)
+              return patch ? ({ ...el, ...patch } as ProjectElement) : el
+            }),
+            updatedAt: nowISO(),
+          },
+          isDirty: true,
+        }
+      }),
 
     removeElement: (id) => {
       get().pushHistory()

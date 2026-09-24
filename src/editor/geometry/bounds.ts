@@ -148,7 +148,19 @@ export function clampChildToParent(childEl: ProjectElement, elements: ProjectEle
   const childBounds = getElementBounds(childEl)
   if (!childBounds || !('parentId' in childEl) || !(childEl as any).parentId) return childBounds
 
-  const parentId = (childEl as any).parentId
+  let parentId = (childEl as any).parentId
+  
+  if (childEl.type !== 'countertop' && childEl.type !== 'wet-area' && childEl.type !== 'backsplash') {
+    const containingWetAreas = elements.filter(p => p.type === 'wet-area' && (() => {
+      const cb = getElementBounds(childEl)
+      const pb = getElementBounds(p)
+      return cb && pb && isInsideBounds(cb, pb)
+    })())
+    if (containingWetAreas.length > 0) {
+      parentId = containingWetAreas[0].id
+    }
+  }
+
   const parentEl = elements.find(el => el.id === parentId)
   if (!parentEl) return childBounds
 

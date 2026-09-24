@@ -353,19 +353,40 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
             : alreadySelected ? selectedIds : [hit.id]
 
           const origPos = new Map<string, Point>()
-          // Include moved elements + their children
+          // 1. Initial explicit selection
           elements.forEach((el: ProjectElement) => {
             if (idsToMove.includes(el.id)) origPos.set(el.id, { ...el.position })
           })
-          elements.forEach((el: ProjectElement) => {
-            if (
-              'parentId' in el &&
-              !origPos.has(el.id) &&
-              idsToMove.includes((el as { parentId: string }).parentId)
-            ) {
-              origPos.set(el.id, { ...el.position })
-            }
-          })
+
+          // 2. Recursively add visual descendants
+          let added = true
+          while (added) {
+            added = false
+            elements.forEach((el: ProjectElement) => {
+              if (origPos.has(el.id)) return
+              
+              if (!('parentId' in el)) return
+              
+              let parentId = (el as any).parentId
+              
+              // For accessories (not countertops, wet-areas, backsplashes), compute the visual parent
+              if (el.type !== 'countertop' && el.type !== 'wet-area' && el.type !== 'backsplash') {
+                const containingWetAreas = elements.filter(p => p.type === 'wet-area' && (() => {
+                  const cb = getElementBounds(el)
+                  const pb = getElementBounds(p)
+                  return cb && pb && isInsideBounds(cb, pb)
+                })())
+                if (containingWetAreas.length > 0) {
+                  parentId = containingWetAreas[0].id
+                }
+              }
+
+              if (origPos.has(parentId)) {
+                origPos.set(el.id, { ...el.position })
+                added = true
+              }
+            })
+          }
 
           setDrag({ type: 'moving', elementIds: idsToMove, startWorld: world, originalPositions: origPos })
         } else {
@@ -519,7 +540,12 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
     return parents.flatMap((parent) => {
       const children = elements.filter((el) => {
         if (!('parentId' in el)) return false
-        if (el.type === 'countertop' || el.type === 'wet-area' || el.type === 'backsplash') return false
+        if (el.type === 'countertop' || el.type === 'backsplash') return false
+
+        // Wet-areas just use their exact parent (the countertop)
+        if (el.type === 'wet-area') {
+          return parent.id === (el as any).parentId && el.dimParent !== false
+        }
 
         const containingWetAreas = parents.filter(p => p.type === 'wet-area' && (() => {
           const cb = getElementBounds(el);
@@ -544,6 +570,9 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         
         return false
       }).map(el => {
+        if (el.type === 'wet-area') {
+           return { ...el, _isVisualDirect: true }
+        }
         const containingWetAreas = parents.filter(p => p.type === 'wet-area' && (() => {
           const cb = getElementBounds(el);
           const pb = getElementBounds(p);

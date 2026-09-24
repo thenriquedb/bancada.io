@@ -215,7 +215,6 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
           )
         })()}
 
-        <AlignmentToolbar element={element} store={store} />
 
         {/* Type-specific */}
         {element.type === 'countertop' && <CountertopProps el={element} unit={unit} store={store} />}
@@ -290,8 +289,8 @@ const AlignmentToolbar: React.FC<{ element: ProjectElement; store: ReturnType<ty
     const childBounds = getElementBounds(element)
     if (!childBounds) return
 
-    // Find visual parent (e.g. wet-area) if the current parent is a countertop
-    if (parent.type === 'countertop') {
+    // Find visual parent (e.g. wet-area) if the current parent is a countertop, and the element itself is not a wet-area
+    if (parent.type === 'countertop' && element.type !== 'wet-area') {
       const wetAreas = store.project.elements.filter((e: ProjectElement) => e.type === 'wet-area' && ('parentId' in e) && e.parentId === parent!.id)
       for (const wa of wetAreas) {
         const waBounds = getElementBounds(wa)
@@ -354,12 +353,49 @@ const AlignmentToolbar: React.FC<{ element: ProjectElement; store: ReturnType<ty
     if (dx === 0 && dy === 0) return
 
     store.pushHistory()
-    store.updateElement(element.id, {
-      position: {
-        x: Math.round(element.position.x + dx),
-        y: Math.round(element.position.y + dy),
-      },
-    })
+    
+    // Find all visual descendants to move them together
+    const idsToMove = [element.id]
+    const elementsToUpdate = new Map<string, ProjectElement>()
+    elementsToUpdate.set(element.id, element)
+    
+    let added = true
+    while (added) {
+      added = false
+      store.project.elements.forEach((el) => {
+        if (elementsToUpdate.has(el.id)) return
+        if (!('parentId' in el)) return
+        
+        let pId = (el as any).parentId
+        if (el.type !== 'countertop' && el.type !== 'wet-area' && el.type !== 'backsplash') {
+          const containingWetAreas = store.project.elements.filter(p => p.type === 'wet-area' && (() => {
+            const cb = getElementBounds(el)
+            const pb = getElementBounds(p)
+            return cb && pb && isInsideBounds(cb, pb)
+          })())
+          if (containingWetAreas.length > 0) {
+            pId = containingWetAreas[0].id
+          }
+        }
+        
+        if (elementsToUpdate.has(pId)) {
+          elementsToUpdate.set(el.id, el)
+          added = true
+        }
+      })
+    }
+
+    const updates = Array.from(elementsToUpdate.values()).map(el => ({
+      id: el.id,
+      patch: {
+        position: {
+          x: Math.round(el.position.x + dx),
+          y: Math.round(el.position.y + dy),
+        }
+      }
+    }))
+    
+    store.updateElements(updates)
   }
 
   return (
