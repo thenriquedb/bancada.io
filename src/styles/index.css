@@ -1038,3 +1038,22 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
 }
 
+
+/* Alignment Toolbar Buttons */
+.align-btn {
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-2);
+  border-radius: 4px;
+  transition: all 0.1s;
+}
+.align-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}

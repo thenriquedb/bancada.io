@@ -16,8 +16,8 @@ import type {
   TrashElement,
   WetAreaElement,
   BacksplashElement,
-  EdgeFinish,
 } from '../models/types.ts'
+import { getElementBounds } from './geometry/bounds.ts'
 
 export const PropertiesPanel: React.FC = () => {
   const selectedIds = useEditorStore(selectSelectedIds)
@@ -143,6 +143,8 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
             <span className="prop-unit">{unit}</span>
           </PropField>
         </PropGroup>
+        
+        <AlignmentToolbar element={element} store={store} />
 
         {/* Type-specific */}
         {element.type === 'countertop' && <CountertopProps el={element} unit={unit} store={store} />}
@@ -160,6 +162,108 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
   )
 }
 
+// ─── Alignment Toolbar ────────────────────────────────────────────────────────
+
+const AlignmentToolbar: React.FC<{ element: ProjectElement; store: ReturnType<typeof useEditorStore> }> = ({ element, store }) => {
+  if (!('parentId' in element)) return null
+  const parentId = (element as any).parentId
+  if (!parentId) return null
+
+  const handleAlign = (alignment: 'left' | 'center-h' | 'right' | 'top' | 'center-v' | 'bottom') => {
+    const parent = store.project.elements.find((e: ProjectElement) => e.id === parentId)
+    if (!parent) return
+
+    let parentBounds = getElementBounds(parent)
+    if (!parentBounds) return
+
+    const childBounds = getElementBounds(element)
+    if (!childBounds) return
+
+    if (parent.type === 'countertop' && parent.geometry.type === 'l-shape') {
+      const g = parent.geometry
+      const cx = childBounds.x + childBounds.width / 2
+      const cy = childBounds.y + childBounds.height / 2
+      
+      if (cx < parent.position.x + g.segmentB.width && cy > parent.position.y + g.segmentA.depth) {
+        parentBounds = {
+          x: parent.position.x,
+          y: parent.position.y + g.segmentA.depth,
+          width: g.segmentB.width,
+          height: g.segmentB.depth,
+        }
+      } else {
+        parentBounds = {
+          x: parent.position.x,
+          y: parent.position.y,
+          width: g.segmentA.width,
+          height: g.segmentA.depth,
+        }
+      }
+    }
+
+    let dx = 0
+    let dy = 0
+
+    switch (alignment) {
+      case 'left':
+        dx = parentBounds.x - childBounds.x
+        break
+      case 'center-h':
+        dx = (parentBounds.x + parentBounds.width / 2) - (childBounds.x + childBounds.width / 2)
+        break
+      case 'right':
+        dx = (parentBounds.x + parentBounds.width) - (childBounds.x + childBounds.width)
+        break
+      case 'top':
+        dy = parentBounds.y - childBounds.y
+        break
+      case 'center-v':
+        dy = (parentBounds.y + parentBounds.height / 2) - (childBounds.y + childBounds.height / 2)
+        break
+      case 'bottom':
+        dy = (parentBounds.y + parentBounds.height) - (childBounds.y + childBounds.height)
+        break
+    }
+
+    if (dx === 0 && dy === 0) return
+
+    store.pushHistory()
+    store.updateElement(element.id, {
+      position: {
+        x: Math.round(element.position.x + dx),
+        y: Math.round(element.position.y + dy),
+      },
+    })
+  }
+
+  return (
+    <div className="alignment-toolbar" style={{ display: 'flex', gap: 4, padding: '4px 0 12px 0' }}>
+      <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <button className="align-btn" onClick={() => handleAlign('left')} title="Alinhar à Esquerda" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="2" y1="1" x2="2" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="4" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button className="align-btn" onClick={() => handleAlign('center-h')} title="Centralizar Horizontalmente" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="7" y1="1" x2="7" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="5" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button className="align-btn" onClick={() => handleAlign('right')} title="Alinhar à Direita" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="13" strokeWidth="1.5"/><rect x="4" y="3" width="6" height="3" fill="currentColor" stroke="none"/><rect x="6" y="8" width="4" height="3" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+      <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <button className="align-btn" onClick={() => handleAlign('top')} title="Alinhar ao Topo" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="2" x2="13" y2="2" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="4" width="3" height="4" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button className="align-btn" onClick={() => handleAlign('center-v')} title="Centralizar Verticalmente" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="7" x2="13" y2="7" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="5" width="3" height="4" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button className="align-btn" onClick={() => handleAlign('bottom')} title="Alinhar à Base" type="button">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor"><line x1="1" y1="12" x2="13" y2="12" strokeWidth="1.5"/><rect x="3" y="4" width="3" height="6" fill="currentColor" stroke="none"/><rect x="8" y="6" width="3" height="4" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Type-specific property editors ──────────────────────────────────────────
 
 type PropsHelper = { unit: string; store: ReturnType<typeof useEditorStore> }
@@ -169,7 +273,6 @@ const CountertopProps: React.FC<{ el: CountertopElement } & PropsHelper> = ({ el
   const toU  = (mm: number) => parseFloat(fromMm(mm, unit as 'mm' | 'cm' | 'm').toFixed(unit === 'mm' ? 0 : 1))
   const toMmU = (v: number) => Math.round(toMm(v, unit as 'mm' | 'cm' | 'm'))
   const g = el.geometry
-  const EDGE_OPTIONS: EdgeFinish[] = ['reto', 'polido', 'boleado', 'chanfrado', '45graus', 'meia-esquadria', 'encostada-parede', 'nenhum']
 
   return (
     <>
@@ -251,21 +354,6 @@ const CountertopProps: React.FC<{ el: CountertopElement } & PropsHelper> = ({ el
             {[12, 15, 20, 30].map((t) => <option key={t} value={t}>{t} mm</option>)}
           </select>
         </PropField>
-      </PropGroup>
-      <PropGroup title="Acabamentos de Borda">
-        {(['front', 'back', 'left', 'right'] as const).map((side) => {
-          const labels: Record<string, string> = { front: 'Frente', back: 'Fundo', left: 'Esq.', right: 'Dir.' }
-          return (
-            <PropField key={side} label={labels[side]}>
-              <select value={el.edgeFinishes[side]}
-                onChange={(e) => store.updateElement(el.id, {
-                  edgeFinishes: { ...el.edgeFinishes, [side]: e.target.value as EdgeFinish },
-                })}>
-                {EDGE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </PropField>
-          )
-        })}
       </PropGroup>
       <PropGroup title="Área / Volume">
         {g.type === 'reta' && (

@@ -148,6 +148,51 @@ export function generateAutoDimensions(
         label: fmt(dTop, unit),
       })
     }
+
+    // Find precise right and bottom edges of parent depending on where the child is
+    let pRight = pos.x + ctW
+    let pBottom = pos.y + ctH
+    
+    if (g.type === 'l-shape') {
+      const cx = bounds.x + bounds.width / 2
+      const cy = bounds.y + bounds.height / 2
+      
+      pBottom = (cx < pos.x + g.segmentB.width) 
+        ? pos.y + g.segmentA.depth + g.segmentB.depth
+        : pos.y + g.segmentA.depth
+        
+      pRight = (cy > pos.y + g.segmentA.depth)
+        ? pos.x + g.segmentB.width
+        : pos.x + g.segmentA.width
+    }
+
+    // Distance from right edge of countertop
+    const dRight = pRight - (bounds.x + bounds.width)
+    if (dRight > 10) {
+      dims.push({
+        id: `dim-${child.id}-right`,
+        orientation: 'horizontal',
+        startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
+        endPoint:   { x: pRight, y: bounds.y + bounds.height / 2 },
+        offset: DIM_OFFSET_SECONDARY,
+        value: dRight,
+        label: fmt(dRight, unit),
+      })
+    }
+
+    // Distance from bottom edge of countertop
+    const dBottom = pBottom - (bounds.y + bounds.height)
+    if (dBottom > 10) {
+      dims.push({
+        id: `dim-${child.id}-bottom`,
+        orientation: 'vertical',
+        startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+        endPoint:   { x: bounds.x + bounds.width, y: pBottom },
+        offset: 40,
+        value: dBottom,
+        label: fmt(dBottom, unit),
+      })
+    }
   })
 
   return dims

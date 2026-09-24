@@ -32,25 +32,6 @@ export type Material = {
 export const THICKNESS_OPTIONS = [12, 15, 20, 30] as const
 export type Thickness = (typeof THICKNESS_OPTIONS)[number]
 
-// ─── Edge finish ────────────────────────────────────────────────────────────
-
-export type EdgeFinish =
-  | 'reto'
-  | 'polido'
-  | 'boleado'
-  | 'chanfrado'
-  | '45graus'
-  | 'meia-esquadria'
-  | 'encostada-parede'
-  | 'nenhum'
-
-export type EdgeFinishes = {
-  front: EdgeFinish
-  back: EdgeFinish
-  left: EdgeFinish
-  right: EdgeFinish
-}
-
 // ─── Countertop geometry ─────────────────────────────────────────────────────
 
 export type CountertopType = 'reta' | 'l-shape' | 'u-shape'
@@ -82,7 +63,6 @@ export type CountertopElement = BaseElement & {
   geometry: CountertopGeometry
   thickness: number // mm
   material?: Material
-  edgeFinishes: EdgeFinishes
 }
 
 export type SinkElement = BaseElement & {

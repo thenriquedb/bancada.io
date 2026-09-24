@@ -4,14 +4,7 @@ import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { MATERIALS } from '../../models/materials.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
-import type { CountertopElement, EdgeFinishes } from '../../models/types.ts'
-
-const DEFAULT_EDGE: EdgeFinishes = {
-  front: 'boleado',
-  back: 'reto',
-  left: 'reto',
-  right: 'reto',
-}
+import type { CountertopElement } from '../../models/types.ts'
 
 export const NewCountertopDialog: React.FC = () => {
   const store = useEditorStore()
@@ -44,7 +37,6 @@ export const NewCountertopDialog: React.FC = () => {
       geometry: { type: 'reta', width: Math.round(widthMm), depth: Math.round(depthMm) },
       thickness,
       material,
-      edgeFinishes: DEFAULT_EDGE,
     }
 
     store.addElement(el)

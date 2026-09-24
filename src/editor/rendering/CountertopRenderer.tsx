@@ -16,7 +16,7 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
   selected,
   hovered,
 }) => {
-  const { position: pos, geometry, material, edgeFinishes } = element
+  const { position: pos, geometry, material } = element
 
   const fillColor = selected
     ? '#dbeafe'
@@ -56,15 +56,7 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
             fill={`url(#${patternId})`} pointerEvents="none" />
         )}
 
-        {/* Edge finish indicators */}
-        <EdgeFinishLine x1={pos.x} y1={pos.y} x2={pos.x + width} y2={pos.y}
-          finish={edgeFinishes.back} label="Fundo" />
-        <EdgeFinishLine x1={pos.x} y1={pos.y + depth} x2={pos.x + width} y2={pos.y + depth}
-          finish={edgeFinishes.front} label="Frente" />
-        <EdgeFinishLine x1={pos.x} y1={pos.y} x2={pos.x} y2={pos.y + depth}
-          finish={edgeFinishes.left} label="Esq" />
-        <EdgeFinishLine x1={pos.x + width} y1={pos.y} x2={pos.x + width} y2={pos.y + depth}
-          finish={edgeFinishes.right} label="Dir" />
+
 
         {/* Label */}
         <CountertopLabel
@@ -127,33 +119,7 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
   return null
 }
 
-// ─── Edge finish line ─────────────────────────────────────────────────────────
 
-type EdgeFinishLineProps = {
-  x1: number; y1: number; x2: number; y2: number
-  finish: string
-  label: string
-}
-
-const EdgeFinishLine: React.FC<EdgeFinishLineProps> = ({ x1, y1, x2, y2, finish }) => {
-  if (finish === 'encostada-parede') {
-    return (
-      <line x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke="#666" strokeWidth={4} strokeDasharray="8 4" opacity={0.5}
-        pointerEvents="none" />
-    )
-  }
-  if (finish === 'boleado' || finish === 'polido' || finish === 'chanfrado') {
-    const color = finish === 'boleado' ? '#1971c2'
-      : finish === 'polido' ? '#2f9e44'
-      : '#e67700'
-    return (
-      <line x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke={color} strokeWidth={3} opacity={0.6} pointerEvents="none" />
-    )
-  }
-  return null
-}
 
 // ─── Label ────────────────────────────────────────────────────────────────────
 

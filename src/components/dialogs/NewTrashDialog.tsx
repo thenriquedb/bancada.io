@@ -4,7 +4,7 @@ import { useEditorStore } from '../../store/editorStore.ts'
 import { generateId } from '../../utils/helpers.ts'
 import { useDialogUnit } from '../../utils/useDialogUnit.ts'
 import type { TrashElement } from '../../models/types.ts'
-import { getValidParents, getDefaultParent } from '../../utils/elementHelpers.ts'
+import { getValidParents, getDefaultParent, centerRelative } from '../../utils/elementHelpers.ts'
 
 export const NewTrashDialog: React.FC = () => {
   const store = useEditorStore()
@@ -20,6 +20,16 @@ export const NewTrashDialog: React.FC = () => {
   const [parentId, setParentId] = useState(defaultCt?.id ?? '')
   const [posX, setPosX]         = useState(fromMm(200))
   const [posY, setPosY]         = useState(fromMm(200))
+
+  const handleAutoCenter = () => {
+    const parent = parents.find((c) => c.id === parentId)
+    if (!parent) return
+    const w = shape === 'circular' ? diameter : width
+    const d = shape === 'circular' ? diameter : depth
+    const { x, y } = centerRelative(parent, toMm(w), toMm(d))
+    setPosX(fromMm(x))
+    setPosY(fromMm(y))
+  }
 
   const handleCreate = () => {
     const parent = parents.find((c) => c.id === parentId)
@@ -85,6 +95,12 @@ export const NewTrashDialog: React.FC = () => {
       </FormSection>
 
       <FormSection title={`Posição a partir da borda (${unit})`}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Ajuste fino da posição:</span>
+          <button className="btn btn--ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={handleAutoCenter} disabled={!parentId} type="button">
+            Centralizar Automaticamente
+          </button>
+        </div>
         <FormField label="Centro X" unit={unit}>
           <input id="trash-pos-x" type="number" min={0} step={step} value={posX}
             onChange={(e) => setPosX(Number(e.target.value))} />
