@@ -28,7 +28,3 @@ export function useDialogUnit() {
   }
 }
 
-/** Default mm dimensions expressed in a given unit (for initial dialog state) */
-export function defaultInUnit(mm: number, unit: Unit): number {
-  return fromMm(mm, unit)
-}

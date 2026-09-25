@@ -12,7 +12,7 @@ import { getElementBounds, isInsideBounds } from '../editor/geometry/bounds.ts'
 
 // ─── Viewport ────────────────────────────────────────────────────────────────
 
-export type Viewport = {
+type Viewport = {
   panX: number
   panY: number
   zoom: number
@@ -24,7 +24,7 @@ export type EditorTool = 'select' | 'pan'
 
 // ─── Dialogs ─────────────────────────────────────────────────────────────────
 
-export type EditorDialog =
+type EditorDialog =
   | 'new-countertop'
   | 'new-lshape'
   | 'new-sink'

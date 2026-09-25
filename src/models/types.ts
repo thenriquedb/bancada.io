@@ -5,7 +5,7 @@ export type Point = {
   y: number // mm
 }
 
-export type Size = {
+type Size = {
   width: number  // mm
   height: number // mm
 }
@@ -18,7 +18,7 @@ export type Unit = 'mm' | 'cm' | 'm'
 
 // ─── Materials ──────────────────────────────────────────────────────────────
 
-export type MaterialCategory = 'granito' | 'marmore' | 'quartzito' | 'porcelana' | 'outro'
+type MaterialCategory = 'granito' | 'marmore' | 'quartzito' | 'porcelana' | 'outro'
 
 export type Material = {
   id: string
@@ -29,12 +29,7 @@ export type Material = {
 
 // ─── Thickness ──────────────────────────────────────────────────────────────
 
-export const THICKNESS_OPTIONS = [12, 15, 20, 30] as const
-export type Thickness = (typeof THICKNESS_OPTIONS)[number]
 
-// ─── Countertop geometry ─────────────────────────────────────────────────────
-
-export type CountertopType = 'reta' | 'l-shape' | 'u-shape'
 
 export type CountertopGeometry =
   | {
@@ -50,7 +45,7 @@ export type CountertopGeometry =
 
 // ─── Element union ──────────────────────────────────────────────────────────
 
-export type BaseElement = {
+type BaseElement = {
   id: string
   position: Point
   locked: boolean
@@ -117,7 +112,7 @@ export type BacksplashElement = BaseElement & {
   parentId: string
 }
 
-export type DimensionElement = BaseElement & {
+type DimensionElement = BaseElement & {
   type: 'dimension'
   orientation: 'horizontal' | 'vertical' | 'aligned'
   startPoint: Point
@@ -126,7 +121,7 @@ export type DimensionElement = BaseElement & {
   auto: boolean
 }
 
-export type AnnotationElement = BaseElement & {
+type AnnotationElement = BaseElement & {
   type: 'annotation'
   text: string
   fontSize: number
@@ -145,7 +140,7 @@ export type ProjectElement =
 
 // ─── Layer ──────────────────────────────────────────────────────────────────
 
-export type Layer = {
+type Layer = {
   id: string
   name: string
   visible: boolean
@@ -157,7 +152,7 @@ export type Layer = {
 
 export type GridSpacing = 10 | 50 | 100 | 500
 
-export type RoomBounds = {
+type RoomBounds = {
   width: number   // mm – room width
   height: number  // mm – room height
   show: boolean   // whether to render the room boundary
@@ -181,7 +176,7 @@ export type Project = {
   clientName?: string
   environment?: string
   material?: Material
-  thickness: Thickness
+  thickness: number
   elements: ProjectElement[]
   layers: Layer[]
   settings: ProjectSettings
@@ -191,7 +186,7 @@ export type Project = {
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
-export type WarningType =
+type WarningType =
   | 'element-outside-countertop'
   | 'element-too-close-to-edge'
   | 'elements-overlapping'

@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ValidationWarning } from '../../models/types.ts'
+import type { ValidationWarning } from '../models/types.ts'
 
 type ValidationWarningsProps = {
   warnings: ValidationWarning[]

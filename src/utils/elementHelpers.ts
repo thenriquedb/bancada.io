@@ -21,25 +21,6 @@ export function getDefaultParent(
   return selected ?? parents[0]
 }
 
-/** Return the world-space center position to center a child element on a parent */
-export function centerInParent(
-  parent: ValidParent,
-  childWidth: number,
-  childDepth: number
-): { x: number; y: number } {
-  let pw = 0, pd = 0
-  if (parent.type === 'countertop') {
-    pw = parent.geometry.type === 'reta' ? parent.geometry.width : parent.geometry.segmentA.width
-    pd = parent.geometry.type === 'reta' ? parent.geometry.depth : parent.geometry.segmentA.depth
-  } else {
-    pw = parent.width
-    pd = parent.depth
-  }
-  return {
-    x: parent.position.x + Math.round((pw - childWidth) / 2),
-    y: parent.position.y + Math.round((pd - childDepth) / 2),
-  }
-}
 
 /** Return the relative position to center a child element inside a parent (used by Dialogs) */
 export function centerRelative(

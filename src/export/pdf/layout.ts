@@ -73,7 +73,4 @@ export function fitToBounds(elements: ProjectElement[], ct: CountertopElement): 
   return { scale: finalScale, offsetX, offsetY, minX, minY, maxX, maxY, bestTechnicalScale }
 }
 
-export function resolveCollisions() {
-  // Simple heuristic collision resolution will be applied at render time if necessary,
-  // but for dimensions, we will position them carefully in dimensions.ts
-}
+

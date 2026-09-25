@@ -4,7 +4,7 @@ import type { ProjectElement, Rect } from '../../models/types.ts'
  * Return the bounding rect (in mm) of any element.
  * Returns null for elements without a fixed bounding box (e.g. annotations).
  */
-export function getUnrotatedBounds(el: ProjectElement): Rect | null {
+function getUnrotatedBounds(el: ProjectElement): Rect | null {
   switch (el.type) {
     case 'countertop': {
       const g = el.geometry
@@ -78,7 +78,7 @@ export function getElementBounds(el: ProjectElement): Rect | null {
 /**
  * Return a bounding rect encompassing all elements.
  */
-export function getGroupBounds(elements: ProjectElement[]): Rect | null {
+function getGroupBounds(elements: ProjectElement[]): Rect | null {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
   let any = false
   for (const el of elements) {
@@ -97,7 +97,7 @@ export function getGroupBounds(elements: ProjectElement[]): Rect | null {
 /**
  * Returns all descendants of a given element recursively.
  */
-export function getDescendants(elId: string, elements: ProjectElement[]): ProjectElement[] {
+function getDescendants(elId: string, elements: ProjectElement[]): ProjectElement[] {
   const children = elements.filter(e => 'parentId' in e && (e as any).parentId === elId)
   let result = [...children]
   for (const child of children) {
@@ -115,21 +115,7 @@ export function getChildrenBounds(elId: string, elements: ProjectElement[]): Rec
   return getGroupBounds(descendants)
 }
 
-/**
- * Clamps a child rect so it doesn't exceed the parent rect boundaries.
- * Keeps the child size intact if possible, or shrinks it if it exceeds parent size.
- */
-export function clampRectToBounds(child: Rect, parent: Rect): Rect {
-  // Clamp size first so it fits inside
-  let cw = Math.min(child.width, parent.width)
-  let ch = Math.min(child.height, parent.height)
-  
-  // Clamp position so it doesn't cross boundaries
-  let cx = Math.max(parent.x, Math.min(child.x, parent.x + parent.width - cw))
-  let cy = Math.max(parent.y, Math.min(child.y, parent.y + parent.height - ch))
-  
-  return { x: cx, y: cy, width: cw, height: ch }
-}
+
 
 /**
  * Checks if the center of element `child` is completely inside the bounds of `parent`.

@@ -17,9 +17,4 @@ export function snapPoint(p: Point, opts: SnapOptions): Point {
   }
 }
 
-/**
- * Snap a single axis value to the grid.
- */
-export function snapValue(value: number, gridSize: number, enabled: boolean): number {
-  return enabled ? snap(value, gridSize) : value
-}
+
