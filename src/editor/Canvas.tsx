@@ -239,6 +239,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [drag, setDrag] = useState<DragState>({ type: 'none' })
   const [hoveredHandle, setHoveredHandle] = useState<string | null>(null)
+  const [isSpacePressed, setIsSpacePressed] = useState(false)
 
   const viewport    = useEditorStore(selectViewport)
   const activeTool  = useEditorStore(selectActiveTool)
@@ -258,6 +259,31 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
     })
     ro.observe(el)
     return () => ro.disconnect()
+  }, [])
+
+  // ── Keyboard shortcuts (Space to pan) ────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !e.repeat) {
+        setIsSpacePressed(true)
+        if (e.target === document.body) {
+           e.preventDefault()
+        }
+      }
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        setIsSpacePressed(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
   }, [])
 
   // ── Wheel zoom ───────────────────────────────────────────────────────────
@@ -289,8 +315,8 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
       const screen = getSvgPt(e)
       const world  = screenToWorld(screen.x, screen.y, viewport.panX, viewport.panY, viewport.zoom)
 
-      // Pan tool / middle button
-      if (e.button === 1 || activeTool === 'pan') {
+      // Pan tool / middle button / spacebar
+      if (e.button === 1 || activeTool === 'pan' || isSpacePressed) {
         setDrag({ type: 'panning', startX: screen.x, startY: screen.y, startPanX: viewport.panX, startPanY: viewport.panY })
         return
       }
@@ -396,7 +422,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         }
       }
     },
-    [activeTool, elements, getSvgPt, selectedIds, settings, store, viewport]
+    [activeTool, elements, getSvgPt, selectedIds, settings, store, viewport, isSpacePressed]
   )
 
   // ── Mouse move ───────────────────────────────────────────────────────────
@@ -491,7 +517,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
 
   // ── Cursor ───────────────────────────────────────────────────────────────
   let cursor = 'default'
-  if (activeTool === 'pan') {
+  if (activeTool === 'pan' || isSpacePressed) {
     cursor = drag.type === 'panning' ? 'grabbing' : 'grab'
   } else if (drag.type === 'panning') {
     cursor = 'grabbing'
