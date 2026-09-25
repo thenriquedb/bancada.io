@@ -12,38 +12,24 @@ export const WetAreaRenderer: React.FC<WetAreaRendererProps> = ({ element, selec
   const { position: pos, width, depth, recess } = element
   const cx = pos.x + width / 2
   const cy = pos.y + depth / 2
-  const stroke = selected ? '#1971c2' : hovered ? '#339af0' : '#b0b0b0'
-  const fill = selected ? 'rgba(59, 130, 246, 0.1)' : hovered ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.08)'
+  const stroke = selected ? '#1971c2' : hovered ? '#339af0' : '#8ce99a' // green dashed
+  const fill = selected ? 'rgba(59, 130, 246, 0.1)' : hovered ? 'rgba(0, 0, 0, 0.05)' : 'rgba(178, 242, 187, 0.2)' // green fill
+  const strokeW = selected ? 2 : 1.5
 
   return (
     <g className="element element--wet-area">
-      <defs>
-        <filter id={`inner-shadow-wa-${element.id}`}>
-          <feOffset dx="0" dy="2" />
-          <feGaussianBlur stdDeviation="3" result="offset-blur" />
-          <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
-          <feFlood floodColor="black" floodOpacity="0.2" result="color" />
-          <feComposite operator="in" in="color" in2="inverse" result="shadow" />
-          <feComposite operator="over" in="shadow" in2="SourceGraphic" />
-        </filter>
-      </defs>
-
-      {/* Area rectangle with inner shadow for recessed look */}
+      {/* Area rectangle */}
       <rect x={pos.x} y={pos.y} width={width} height={depth}
         fill={fill}
-        stroke={stroke} strokeWidth={selected ? 8 : 5}
-        filter={`url(#inner-shadow-wa-${element.id})`} />
+        stroke={stroke} strokeWidth={strokeW}
+        strokeDasharray="8 8" />
 
       {/* Label */}
-      <text x={cx} y={cy - 12} textAnchor="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.09, 14 / zoom)} fontFamily="Inter, sans-serif" fill="#555" fontWeight="500"
+      <text x={cx} y={cy - 5} textAnchor="middle" dominantBaseline="middle"
+        fontSize={Math.max(Math.min(width, depth) * 0.09, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
-        Área Molhada
-      </text>
-      <text x={cx} y={cy + 18} textAnchor="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.07, 10 / zoom)} fontFamily="Inter, sans-serif" fill="#666"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
-        Rebaixo {recess} mm
+        ÁREA MOLHADA
+        <tspan x={cx} dy={Math.max(Math.min(width, depth) * 0.07, 16 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(width, depth) * 0.06, 10 / zoom)} fill="#868e96">REBAIXO {recess} mm</tspan>
       </text>
     </g>
   )

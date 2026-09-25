@@ -1,4 +1,5 @@
 import React from 'react'
+import { GRID_LINE_WIDTH_MINOR, GRID_LINE_WIDTH_MAJOR } from './constants.ts'
 
 type GridProps = {
   panX: number
@@ -22,16 +23,22 @@ export const Grid: React.FC<GridProps> = ({
   const verticals: React.ReactNode[] = []
   const horizontals: React.ReactNode[] = []
 
+  // Very light gray for grid lines to reduce clutter
+  const gridColorMinor = "rgba(0, 0, 0, 0.02)"
+  const gridColorMajor = "rgba(0, 0, 0, 0.06)"
+
   for (let x = offsetX; x <= canvasWidth; x += cellPx) {
+    const isMajor = Math.abs((x - panX) % (cellPx * 5)) < 1;
     verticals.push(
       <line key={`v-${x.toFixed(2)}`} x1={x} y1={0} x2={x} y2={canvasHeight}
-        stroke="var(--grid-line)" strokeWidth={0.5} />
+        stroke={isMajor ? gridColorMajor : gridColorMinor} strokeWidth={isMajor ? GRID_LINE_WIDTH_MAJOR : GRID_LINE_WIDTH_MINOR} />
     )
   }
   for (let y = offsetY; y <= canvasHeight; y += cellPx) {
+    const isMajor = Math.abs((y - panY) % (cellPx * 5)) < 1;
     horizontals.push(
       <line key={`h-${y.toFixed(2)}`} x1={0} y1={y} x2={canvasWidth} y2={y}
-        stroke="var(--grid-line)" strokeWidth={0.5} />
+        stroke={isMajor ? gridColorMajor : gridColorMinor} strokeWidth={isMajor ? GRID_LINE_WIDTH_MAJOR : GRID_LINE_WIDTH_MINOR} />
     )
   }
 
@@ -39,14 +46,14 @@ export const Grid: React.FC<GridProps> = ({
   const oy = panY
 
   return (
-    <g role="presentation" aria-hidden="true">
+    <g role="presentation" aria-hidden="true" style={{ pointerEvents: 'none' }}>
       {verticals}
       {horizontals}
       {ox >= 0 && ox <= canvasWidth && (
-        <line x1={ox} y1={0} x2={ox} y2={canvasHeight} stroke="var(--grid-origin)" strokeWidth={1} />
+        <line x1={ox} y1={0} x2={ox} y2={canvasHeight} stroke="rgba(0, 0, 0, 0.2)" strokeWidth={1} />
       )}
       {oy >= 0 && oy <= canvasHeight && (
-        <line x1={0} y1={oy} x2={canvasWidth} y2={oy} stroke="var(--grid-origin)" strokeWidth={1} />
+        <line x1={0} y1={oy} x2={canvasWidth} y2={oy} stroke="rgba(0, 0, 0, 0.2)" strokeWidth={1} />
       )}
     </g>
   )

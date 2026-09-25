@@ -5,28 +5,24 @@ type BacksplashRendererProps = {
   element: BacksplashElement
   selected: boolean
   hovered: boolean
+  zoom?: number
 }
 
-export const BacksplashRenderer: React.FC<BacksplashRendererProps> = ({ element, selected, hovered }) => {
+export const BacksplashRenderer: React.FC<BacksplashRendererProps> = ({ element, selected, hovered, zoom = 1 }) => {
   const { position: pos, height, length } = element
-  const stroke = selected ? '#1971c2' : hovered ? '#339af0' : '#888888'
-  const fill = selected ? '#dbeafe' : hovered ? '#eff6ff' : '#ece9e0'
+  const stroke = selected ? '#1971c2' : hovered ? '#339af0' : '#adb5bd'
+  const fill = selected ? '#dbeafe' : hovered ? '#eff6ff' : '#f8f9fa'
 
   return (
     <g className="element element--backsplash">
       <rect x={pos.x} y={pos.y} width={length} height={height}
         fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} />
 
-      {/* Horizontal texture lines */}
-      {Array.from({ length: Math.floor(height / 25) }, (_, i) => (
-        <line key={i} x1={pos.x + 4} y1={pos.y + 12 + i * 25} x2={pos.x + length - 4} y2={pos.y + 12 + i * 25}
-          stroke={stroke} strokeWidth={0.5} opacity={0.3} />
-      ))}
-
       <text x={pos.x + length / 2} y={pos.y + height / 2} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.min(height * 0.3, 30)} fontFamily="Inter, sans-serif" fill="#666"
+        fontSize={Math.max(Math.min(length, height) * 0.3, 10 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
-        Rodabanca {height} mm
+        RODABANCA
+        <tspan x={pos.x + length / 2} dy={Math.max(Math.min(length, height) * 0.4, 14 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(length, height) * 0.25, 8 / zoom)} fill="#868e96">{height} mm</tspan>
       </text>
     </g>
   )

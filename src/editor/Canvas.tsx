@@ -675,6 +675,26 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         {autoDimensions.length > 0 && (
           <DimensionRenderer dimensions={autoDimensions} zoom={viewport.zoom} />
         )}
+
+        {/* Drag Guides */}
+        {drag.type === 'moving' && (
+          <g className="drag-guides" pointerEvents="none" opacity={0.6}>
+            {drag.elementIds.map(id => {
+              const el = elements.find(e => e.id === id)
+              if (!el) return null
+              const b = getElementBounds(el)
+              if (!b) return null
+              return (
+                <React.Fragment key={`guide-${id}`}>
+                  <line x1={-10000} y1={b.y} x2={10000} y2={b.y} stroke="#339af0" strokeWidth={1.5/viewport.zoom} strokeDasharray="5 5" />
+                  <line x1={-10000} y1={b.y + b.height} x2={10000} y2={b.y + b.height} stroke="#339af0" strokeWidth={1.5/viewport.zoom} strokeDasharray="5 5" />
+                  <line x1={b.x} y1={-10000} x2={b.x} y2={10000} stroke="#339af0" strokeWidth={1.5/viewport.zoom} strokeDasharray="5 5" />
+                  <line x1={b.x + b.width} y1={-10000} x2={b.x + b.width} y2={10000} stroke="#339af0" strokeWidth={1.5/viewport.zoom} strokeDasharray="5 5" />
+                </React.Fragment>
+              )
+            })}
+          </g>
+        )}
       </g>
 
       {/* Selection overlay with resize handles (screen-space) */}
