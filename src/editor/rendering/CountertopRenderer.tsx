@@ -58,14 +58,6 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
 
 
 
-        {/* Label */}
-        <CountertopLabel
-          cx={pos.x + width / 2}
-          cy={pos.y + depth / 2}
-          materialName={material?.name}
-          width={width}
-          depth={depth}
-        />
       </g>
     )
   }
@@ -105,13 +97,6 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
           <polygon points={pointsStr} fill={`url(#${patternId})`} pointerEvents="none" />
         )}
 
-        <CountertopLabel
-          cx={pos.x + segmentB.width / 2}
-          cy={pos.y + segmentA.depth + segmentB.depth / 2}
-          materialName={material?.name}
-          width={maxW}
-          depth={totalH}
-        />
       </g>
     )
   }
@@ -119,38 +104,3 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
   return null
 }
 
-
-
-// ─── Label ────────────────────────────────────────────────────────────────────
-
-type CountertopLabelProps = {
-  cx: number; cy: number
-  materialName?: string
-  width: number; depth: number
-}
-
-function fmtCm(mm: number): string {
-  return `${parseFloat((mm / 10).toFixed(1))}cm`
-}
-
-const CountertopLabel: React.FC<CountertopLabelProps> = ({ cx, cy, materialName, width, depth }) => {
-  const minDim = Math.min(width, depth)
-  if (minDim < 80) return null // too small to show label
-
-  const fontSize = Math.min(minDim * 0.06, 40)
-
-  return (
-    <g pointerEvents="none" style={{ userSelect: 'none' }}>
-      <text x={cx} y={cy - fontSize * 0.6} textAnchor="middle" dominantBaseline="middle"
-        fontSize={fontSize} fontFamily="Inter, sans-serif" fill="#444" fontWeight="500">
-        {fmtCm(width)} × {fmtCm(depth)}
-      </text>
-      {materialName && minDim > 150 && (
-        <text x={cx} y={cy + fontSize * 0.9} textAnchor="middle" dominantBaseline="middle"
-          fontSize={fontSize * 0.7} fontFamily="Inter, sans-serif" fill="#888">
-          {materialName}
-        </text>
-      )}
-    </g>
-  )
-}
