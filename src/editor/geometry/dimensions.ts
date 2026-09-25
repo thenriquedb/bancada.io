@@ -127,13 +127,21 @@ export function generateAutoDimensions(
     // Dynamic offset based on parent type to avoid overlap when both are drawn
     const childDimOffset = parent.type === 'countertop' ? DIM_OFFSET_PRIMARY : DIM_OFFSET_SECONDARY
 
-    // Distance from left edge of countertop
-    const dLeft = bounds.x - pos.x
-    if (dLeft > 10) {
+    // Distance from left edge of countertop (or nearest wet-area)
+    let leftBound = pos.x
+    if (parent.type === 'countertop' && child.type !== 'wet-area') {
+      const waToLeft = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.x + getElementBounds(c)!.width <= bounds.x)
+      if (waToLeft.length > 0) {
+        const closest = waToLeft.reduce((p, c) => (getElementBounds(c)!.x + getElementBounds(c)!.width > getElementBounds(p)!.x + getElementBounds(p)!.width) ? c : p)
+        leftBound = getElementBounds(closest)!.x + getElementBounds(closest)!.width
+      }
+    }
+    const dLeft = bounds.x - leftBound
+    if (dLeft > 10 && child.dimLeft !== false) {
       dims.push({
         id: `dim-${child.id}-left-${parent.id}`,
         orientation: 'horizontal',
-        startPoint: { x: pos.x, y: bounds.y + bounds.height / 2 },
+        startPoint: { x: leftBound, y: bounds.y + bounds.height / 2 },
         endPoint:   { x: bounds.x, y: bounds.y + bounds.height / 2 },
         offset: childDimOffset,
         value: dLeft,
@@ -157,7 +165,7 @@ export function generateAutoDimensions(
 
     // Distance from top edge of parent
     const dTop = bounds.y - pos.y
-    if (dTop > 10 && dTop < pH) {
+    if (dTop > 10 && dTop < pH && child.dimTop !== false) {
       dims.push({
         id: `dim-${child.id}-top-${parent.id}`,
         orientation: 'vertical',
@@ -186,14 +194,22 @@ export function generateAutoDimensions(
         : pos.x + g.segmentA.width
     }
 
-    // Distance from right edge of parent
-    const dRight = pRight - (bounds.x + bounds.width)
-    if (dRight > 10) {
+    // Distance from right edge of parent (or nearest wet-area)
+    let rightBound = pRight
+    if (parent.type === 'countertop' && child.type !== 'wet-area') {
+      const waToRight = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.x >= bounds.x + bounds.width)
+      if (waToRight.length > 0) {
+        const closest = waToRight.reduce((p, c) => (getElementBounds(c)!.x < getElementBounds(p)!.x) ? c : p)
+        rightBound = getElementBounds(closest)!.x
+      }
+    }
+    const dRight = rightBound - (bounds.x + bounds.width)
+    if (dRight > 10 && child.dimRight !== false) {
       dims.push({
         id: `dim-${child.id}-right-${parent.id}`,
         orientation: 'horizontal',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
-        endPoint:   { x: pRight, y: bounds.y + bounds.height / 2 },
+        endPoint:   { x: rightBound, y: bounds.y + bounds.height / 2 },
         offset: childDimOffset,
         value: dRight,
         label: fmt(dRight, unit),
@@ -202,7 +218,7 @@ export function generateAutoDimensions(
 
     // Distance from bottom edge of countertop
     const dBottom = pBottom - (bounds.y + bounds.height)
-    if (dBottom > 10) {
+    if (dBottom > 10 && child.dimBottom !== false) {
       dims.push({
         id: `dim-${child.id}-bottom-${parent.id}`,
         orientation: 'vertical',

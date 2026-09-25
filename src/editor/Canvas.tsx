@@ -544,7 +544,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
 
         // Wet-areas just use their exact parent (the countertop)
         if (el.type === 'wet-area') {
-          return parent.id === (el as any).parentId && el.dimParent !== false
+          return parent.id === (el as any).parentId
         }
 
         const containingWetAreas = parents.filter(p => p.type === 'wet-area' && (() => {
@@ -558,7 +558,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
           : parents.find(p => p.id === (el as any).parentId)
 
         if (parent.id === visualDirectParent?.id) {
-          return el.dimParent !== false
+          return true
         }
 
         if (parent.type === 'countertop' && containingWetAreas.length > 0) {

@@ -56,7 +56,10 @@ export type BaseElement = {
   locked: boolean
   visible: boolean
   dimSelf?: boolean
-  dimParent?: boolean
+  dimLeft?: boolean
+  dimRight?: boolean
+  dimTop?: boolean
+  dimBottom?: boolean
   dimRoot?: boolean
   label?: string
   rotation?: number // in degrees

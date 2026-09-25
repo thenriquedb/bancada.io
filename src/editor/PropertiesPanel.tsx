@@ -238,16 +238,48 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
           </PropField>
           
           {'parentId' in element && (
-            <PropField label="Ao Pai Direto">
-              <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                <input type="checkbox"
-                  checked={element.dimParent !== false}
-                  onChange={(e) => {
-                    store.pushHistory()
-                    store.updateElement(element.id, { dimParent: e.target.checked })
-                  }} />
-              </div>
-            </PropField>
+            <>
+              <PropField label="Ao Topo">
+                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                  <input type="checkbox"
+                    checked={element.dimTop !== false}
+                    onChange={(e) => {
+                      store.pushHistory()
+                      store.updateElement(element.id, { dimTop: e.target.checked })
+                    }} />
+                </div>
+              </PropField>
+              <PropField label="À Base">
+                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                  <input type="checkbox"
+                    checked={element.dimBottom !== false}
+                    onChange={(e) => {
+                      store.pushHistory()
+                      store.updateElement(element.id, { dimBottom: e.target.checked })
+                    }} />
+                </div>
+              </PropField>
+              <PropField label="À Esquerda">
+                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                  <input type="checkbox"
+                    checked={element.dimLeft !== false}
+                    onChange={(e) => {
+                      store.pushHistory()
+                      store.updateElement(element.id, { dimLeft: e.target.checked })
+                    }} />
+                </div>
+              </PropField>
+              <PropField label="À Direita">
+                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                  <input type="checkbox"
+                    checked={element.dimRight !== false}
+                    onChange={(e) => {
+                      store.pushHistory()
+                      store.updateElement(element.id, { dimRight: e.target.checked })
+                    }} />
+                </div>
+              </PropField>
+            </>
           )}
 
           {'parentId' in element && (() => {
@@ -544,16 +576,6 @@ const SinkProps: React.FC<{ el: SinkElement } & PropsHelper> = ({ el, store }) =
     <PropField label="Prof. total">
       <input type="number" step={5} value={el.depth}
         onChange={(e) => store.updateElement(el.id, { depth: Number(e.target.value) })} />
-      <span className="prop-unit">mm</span>
-    </PropField>
-    <PropField label="Recorte L">
-      <input type="number" step={5} value={el.cutWidth}
-        onChange={(e) => store.updateElement(el.id, { cutWidth: Number(e.target.value) })} />
-      <span className="prop-unit">mm</span>
-    </PropField>
-    <PropField label="Recorte P">
-      <input type="number" step={5} value={el.cutDepth}
-        onChange={(e) => store.updateElement(el.id, { cutDepth: Number(e.target.value) })} />
       <span className="prop-unit">mm</span>
     </PropField>
   </PropGroup>
