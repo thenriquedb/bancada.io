@@ -67,12 +67,14 @@ export function generateAutoDimensions(
     })
 
     // ── Overall height ───────────────────────────────────────────────────────
+    const xDepth = isLShape ? pos.x : pos.x + pW
+    const offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 70
     dims.push({
       id: `dim-${parent.id}-depth`,
       orientation: 'vertical',
-      startPoint: { x: pos.x + pW, y: pos.y },
-      endPoint:   { x: pos.x + pW, y: pos.y + pH },
-      offset: 70,
+      startPoint: { x: xDepth, y: pos.y },
+      endPoint:   { x: xDepth, y: pos.y + pH },
+      offset: offsetDepth,
       value: pH,
       label: fmt(pH, unit),
     })
