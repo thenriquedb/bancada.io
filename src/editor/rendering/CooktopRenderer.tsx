@@ -62,7 +62,7 @@ export const CooktopRenderer: React.FC<CooktopRendererProps> = ({ element, selec
 
       {/* Label */}
       <text x={pos.x + width / 2} y={pos.y + 20} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.12, 14 / zoom)} fontFamily="Inter, sans-serif" fill="#868e96"
+        fontSize={Math.max(Math.min(width, depth) * 0.12, 10 / zoom)} fontFamily="Inter, sans-serif" fill="#868e96"
         style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 500 }}>
         Cooktop
       </text>

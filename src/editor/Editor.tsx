@@ -17,7 +17,7 @@ import { NewWetAreaDialog } from '../components/dialogs/NewWetAreaDialog.tsx'
 import { NewBacksplashDialog } from '../components/dialogs/NewBacksplashDialog.tsx'
 import { ConfirmDeleteDialog } from '../components/dialogs/ConfirmDeleteDialog.tsx'
 import { validateElements } from './geometry/validation.ts'
-import { exportProjectPDF } from '../pdf/generator.ts'
+import { exportProjectPDF, exportProjectImage } from '../pdf/generator.ts'
 import type { Project } from '../models/types.ts'
 
 export const Editor: React.FC = () => {
@@ -103,6 +103,15 @@ export const Editor: React.FC = () => {
     }
   }, [store])
 
+  const handleExportImage = useCallback(async () => {
+    try {
+      await exportProjectImage(store.project)
+    } catch (err) {
+      console.error(err)
+      alert('Erro ao exportar imagem. Verifique o console para detalhes.')
+    }
+  }, [store])
+
   return (
     <div className="editor-layout" role="main">
       <Toolbar
@@ -110,6 +119,7 @@ export const Editor: React.FC = () => {
         onExportJSON={handleExportJSON}
         onImportJSON={handleImportJSON}
         onExportPDF={handleExportPDF}
+        onExportImage={handleExportImage}
         canvasWidth={canvasSize.width}
         canvasHeight={canvasSize.height}
       />

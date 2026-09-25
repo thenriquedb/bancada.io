@@ -1,1 +1,1 @@
-export { exportProjectPDF } from '../export/pdf/exporter.ts'
+export { exportProjectPDF, exportProjectImage } from '../export/pdf/exporter.ts'

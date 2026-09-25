@@ -210,7 +210,7 @@ function drawDimension(doc: jsPDF, dim: PdfDimension, layout: PdfLayout) {
   }
 }
 
-function drawSidePanel(doc: jsPDF, project: Project, ct: CountertopElement, pageIdx: number, totalPages: number) {
+export function drawSidePanel(doc: jsPDF, project: Project, ct: CountertopElement, pageIdx: number, totalPages: number) {
   const panelX = PDF_THEME.page.width - PDF_THEME.page.margin - PDF_THEME.panel.width
   const panelY = PDF_THEME.page.margin
   const panelH = PDF_THEME.page.height - PDF_THEME.page.margin * 2

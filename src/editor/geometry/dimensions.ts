@@ -6,6 +6,7 @@ import { fromMm } from '../../utils/units.ts'
 
 export type AutoDimension = {
   id: string
+  countertopId: string
   orientation: 'horizontal' | 'vertical'
   kind: 'countertop' | 'element' | 'gap'
   startPoint: Point
@@ -36,7 +37,8 @@ const DIM_OFFSET_ELEMENT = -50    // mm for sinks, cooktops
 export function generateAutoDimensions(
   parent: CountertopElement | WetAreaElement,
   children: ProjectElement[],
-  unit: Unit = 'cm'
+  unit: Unit = 'cm',
+  countertopId: string
 ): AutoDimension[] {
   const dims: AutoDimension[] = []
   const pos = parent.position
@@ -60,6 +62,7 @@ export function generateAutoDimensions(
     // ── Overall width (Segment A comprimento) ────────────────────────────────
     dims.push({
       id: `dim-${parent.id}-width`,
+      countertopId,
       orientation: 'horizontal',
       kind: 'countertop',
       startPoint: { x: pos.x, y: pos.y },
@@ -74,6 +77,7 @@ export function generateAutoDimensions(
     const offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 50
     dims.push({
       id: `dim-${parent.id}-depth`,
+      countertopId,
       orientation: 'vertical',
       kind: 'countertop',
       startPoint: { x: xDepth, y: pos.y },
@@ -90,6 +94,7 @@ export function generateAutoDimensions(
       // Segment A depth (profundidade)
       dims.push({
         id: `dim-${parent.id}-sA-depth`,
+        countertopId,
         orientation: 'vertical',
         kind: 'countertop',
         startPoint: { x: pos.x + sA.width, y: pos.y },
@@ -102,6 +107,7 @@ export function generateAutoDimensions(
       // Segment B comprimento (vertical extent below A)
       dims.push({
         id: `dim-${parent.id}-sB-length`,
+        countertopId,
         orientation: 'vertical',
         kind: 'countertop',
         startPoint: { x: pos.x + sB.width, y: pos.y + sA.depth },
@@ -114,6 +120,7 @@ export function generateAutoDimensions(
       // Segment B profundidade (horizontal width of B column)
       dims.push({
         id: `dim-${parent.id}-sB-width`,
+        countertopId,
         orientation: 'horizontal',
         kind: 'countertop',
         startPoint: { x: pos.x, y: pos.y + sA.depth + sB.depth },
@@ -148,6 +155,7 @@ export function generateAutoDimensions(
     if (dLeft > 10 && child.dimLeft !== false) {
       dims.push({
         id: `dim-${child.id}-left-${parent.id}`,
+        countertopId,
         orientation: 'horizontal',
         kind: 'gap',
         startPoint: { x: leftBound, y: bounds.y + bounds.height / 2 },
@@ -163,6 +171,7 @@ export function generateAutoDimensions(
     if (bounds.width > 20 && child.dimSelf !== false && isDirect) {
       dims.push({
         id: `dim-${child.id}-width`,
+        countertopId,
         orientation: 'horizontal',
         kind: 'element',
         startPoint: { x: bounds.x, y: bounds.y },
@@ -178,6 +187,7 @@ export function generateAutoDimensions(
     if (dTop > 10 && dTop < pH && child.dimTop !== false) {
       dims.push({
         id: `dim-${child.id}-top-${parent.id}`,
+        countertopId,
         orientation: 'vertical',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: pos.y },
@@ -218,6 +228,7 @@ export function generateAutoDimensions(
     if (dRight > 10 && child.dimRight !== false) {
       dims.push({
         id: `dim-${child.id}-right-${parent.id}`,
+        countertopId,
         orientation: 'horizontal',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
@@ -233,6 +244,7 @@ export function generateAutoDimensions(
     if (dBottom > 10 && child.dimBottom !== false) {
       dims.push({
         id: `dim-${child.id}-bottom-${parent.id}`,
+        countertopId,
         orientation: 'vertical',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },

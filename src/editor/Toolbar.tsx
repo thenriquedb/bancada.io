@@ -16,12 +16,13 @@ type ToolbarProps = {
   onExportJSON: () => void
   onImportJSON: () => void
   onExportPDF:  () => void
+  onExportImage:() => void
   canvasWidth:  number
   canvasHeight: number
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
-  onNewProject, onExportJSON, onImportJSON, onExportPDF, canvasWidth, canvasHeight,
+  onNewProject, onExportJSON, onImportJSON, onExportPDF, onExportImage, canvasWidth, canvasHeight,
 }) => {
   const activeTool = useEditorStore(selectActiveTool)
   const canUndo    = useEditorStore(selectCanUndo)
@@ -53,6 +54,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <ToolbarMenuItem onClick={() => store.saveToLocalStorage()}>Salvar  (Ctrl+S)</ToolbarMenuItem>
           <ToolbarMenuItem onClick={onExportJSON}>Exportar JSON</ToolbarMenuItem>
           <ToolbarMenuDivider />
+          <ToolbarMenuItem onClick={onExportImage}>Exportar Imagem (PNG)</ToolbarMenuItem>
           <ToolbarMenuItem onClick={onExportPDF}>⬇ Exportar PDF  (Ctrl+E)</ToolbarMenuItem>
         </ToolbarMenu>
 

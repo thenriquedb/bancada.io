@@ -612,7 +612,8 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
           
         return { ...el, _isVisualDirect: parent.id === visualDirectParent?.id }
       })
-      return generateAutoDimensions(parent, children, unit)
+      const countertopId = parent.type === 'countertop' ? parent.id : parent.parentId || parent.id
+      return generateAutoDimensions(parent, children, unit, countertopId)
     })
   }, [elements, settings.showDimensions, unit])
 
@@ -658,14 +659,15 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         {elements.map((el: ProjectElement) => {
           const hasError = warnings.some(w => w.type === 'elements-overlapping' && w.elementIds.includes(el.id))
           return (
-            <ElementRenderer
-              key={el.id}
-              element={el}
-              selected={selectedIds.includes(el.id)}
-              hovered={hoveredId === el.id}
-              hasError={hasError}
-              zoom={viewport.zoom}
-            />
+            <g key={el.id} data-element-id={el.id}>
+              <ElementRenderer
+                element={el}
+                selected={selectedIds.includes(el.id)}
+                hovered={hoveredId === el.id}
+                hasError={hasError}
+                zoom={viewport.zoom}
+              />
+            </g>
           )
         })}
 

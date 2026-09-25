@@ -17,7 +17,9 @@ export const DimensionRenderer: React.FC<DimensionRendererProps> = ({ dimensions
   return (
     <g className="dimension-layer" pointerEvents="none">
       {dimensions.map((dim) => (
-        <DimLine key={dim.id} dim={dim} zoom={zoom} />
+        <g key={dim.id} data-countertop-id={dim.countertopId}>
+          <DimLine dim={dim} zoom={zoom} />
+        </g>
       ))}
     </g>
   )
@@ -61,7 +63,7 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
     kind === 'countertop' ? '#1971c2' :
     kind === 'element'    ? '#0ca678' :
                             '#e8590c' // gap
-  const fontSize = Math.max(40, 14 / zoom)
+  const fontSize = Math.max(24, 10 / zoom)
   const tickLen = Math.max(16, 6 / zoom)
   const strokeDim = Math.max(2, 1.5 / zoom)
   const strokeTick = Math.max(3, 2 / zoom)

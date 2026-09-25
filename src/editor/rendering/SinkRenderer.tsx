@@ -78,7 +78,7 @@ export const SinkRenderer: React.FC<SinkRendererProps> = ({ element, selected, h
 
       {/* Label */}
       <text x={cx} y={pos.y + depth - innerMargin / 2} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.1, 14 / zoom)} fontFamily="Inter, sans-serif" fill="#555"
+        fontSize={Math.max(Math.min(width, depth) * 0.1, 10 / zoom)} fontFamily="Inter, sans-serif" fill="#555"
         stroke="#ffffff" strokeWidth={3} paintOrder="stroke fill" strokeOpacity={0.8}
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
         Cuba {width}×{depth}
