@@ -25,7 +25,7 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
       : '#f8f6f0'
 
   const strokeColor = selected ? '#1971c2' : '#555555'
-  const strokeWidth = selected ? 2 : 1.5
+  const strokeWidth = selected ? 7 : 6
 
   // ── Pattern ID for stone texture ──────────────────────────────────────────
   const patternId = `granite-${element.id}`
@@ -36,9 +36,9 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
       <g className="element element--countertop">
         <defs>
           <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="20" x2="20" y2="0" stroke="rgba(0,0,0,0.04)" strokeWidth="0.8"/>
-            <line x1="-5" y1="5" x2="5" y2="-5" stroke="rgba(0,0,0,0.03)" strokeWidth="0.8"/>
-            <line x1="15" y1="25" x2="25" y2="15" stroke="rgba(0,0,0,0.03)" strokeWidth="0.8"/>
+            <line x1="0" y1="20" x2="20" y2="0" stroke="rgba(0,0,0,0.04)" strokeWidth="0.8" />
+            <line x1="-5" y1="5" x2="5" y2="-5" stroke="rgba(0,0,0,0.03)" strokeWidth="0.8" />
+            <line x1="15" y1="25" x2="25" y2="15" stroke="rgba(0,0,0,0.03)" strokeWidth="0.8" />
           </pattern>
         </defs>
 
@@ -77,12 +77,12 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
 
     // L-shape polygon points
     const pts = [
-      [pos.x,                  pos.y],
+      [pos.x, pos.y],
       [pos.x + segmentA.width, pos.y],
       [pos.x + segmentA.width, pos.y + segmentA.depth],
       [pos.x + segmentB.width, pos.y + segmentA.depth],
       [pos.x + segmentB.width, pos.y + totalH],
-      [pos.x,                  pos.y + totalH],
+      [pos.x, pos.y + totalH],
     ]
     const pointsStr = pts.map(([x, y]) => `${x},${y}`).join(' ')
 
@@ -90,7 +90,7 @@ export const CountertopRenderer: React.FC<CountertopRendererProps> = ({
       <g className="element element--countertop">
         <defs>
           <pattern id={patternId} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="20" x2="20" y2="0" stroke="rgba(0,0,0,0.04)" strokeWidth="0.8"/>
+            <line x1="0" y1="20" x2="20" y2="0" stroke="rgba(0,0,0,0.04)" strokeWidth="0.8" />
           </pattern>
         </defs>
 

@@ -7,6 +7,7 @@ import { fromMm } from '../../utils/units.ts'
 export type AutoDimension = {
   id: string
   orientation: 'horizontal' | 'vertical'
+  kind: 'countertop' | 'element' | 'gap'
   startPoint: Point
   endPoint: Point
   offset: number   // mm – positive = above/right of line
@@ -59,6 +60,7 @@ export function generateAutoDimensions(
     dims.push({
       id: `dim-${parent.id}-width`,
       orientation: 'horizontal',
+      kind: 'countertop',
       startPoint: { x: pos.x, y: pos.y },
       endPoint:   { x: pos.x + pW, y: pos.y },
       offset: DIM_OFFSET_PRIMARY,
@@ -72,6 +74,7 @@ export function generateAutoDimensions(
     dims.push({
       id: `dim-${parent.id}-depth`,
       orientation: 'vertical',
+      kind: 'countertop',
       startPoint: { x: xDepth, y: pos.y },
       endPoint:   { x: xDepth, y: pos.y + pH },
       offset: offsetDepth,
@@ -87,6 +90,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${parent.id}-sA-depth`,
         orientation: 'vertical',
+        kind: 'countertop',
         startPoint: { x: pos.x + sA.width, y: pos.y },
         endPoint:   { x: pos.x + sA.width, y: pos.y + sA.depth },
         offset: 40,
@@ -98,6 +102,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${parent.id}-sB-length`,
         orientation: 'vertical',
+        kind: 'countertop',
         startPoint: { x: pos.x + sB.width, y: pos.y + sA.depth },
         endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
         offset: 40,
@@ -109,6 +114,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${parent.id}-sB-width`,
         orientation: 'horizontal',
+        kind: 'countertop',
         startPoint: { x: pos.x, y: pos.y + sA.depth + sB.depth },
         endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
         offset: 40,
@@ -141,6 +147,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${child.id}-left-${parent.id}`,
         orientation: 'horizontal',
+        kind: 'gap',
         startPoint: { x: leftBound, y: bounds.y + bounds.height / 2 },
         endPoint:   { x: bounds.x, y: bounds.y + bounds.height / 2 },
         offset: childDimOffset,
@@ -155,6 +162,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${child.id}-width`,
         orientation: 'horizontal',
+        kind: 'element',
         startPoint: { x: bounds.x, y: bounds.y },
         endPoint:   { x: bounds.x + bounds.width, y: bounds.y },
         offset: DIM_OFFSET_SECONDARY, // width can stay secondary since it's only drawn once
@@ -169,6 +177,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${child.id}-top-${parent.id}`,
         orientation: 'vertical',
+        kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: pos.y },
         endPoint:   { x: bounds.x + bounds.width, y: bounds.y },
         offset: -childDimOffset, // vertical offsets are typically positive or negative based on side. Using -childDimOffset pushes it right.
@@ -208,6 +217,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${child.id}-right-${parent.id}`,
         orientation: 'horizontal',
+        kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
         endPoint:   { x: rightBound, y: bounds.y + bounds.height / 2 },
         offset: childDimOffset,
@@ -222,6 +232,7 @@ export function generateAutoDimensions(
       dims.push({
         id: `dim-${child.id}-bottom-${parent.id}`,
         orientation: 'vertical',
+        kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
         endPoint:   { x: bounds.x + bounds.width, y: pBottom },
         offset: -childDimOffset, // push it right

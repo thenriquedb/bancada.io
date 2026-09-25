@@ -18,19 +18,19 @@ export const WetAreaRenderer: React.FC<WetAreaRendererProps> = ({ element, selec
     <g className="element element--wet-area">
       <defs>
         <filter id={`inner-shadow-wa-${element.id}`}>
-          <feOffset dx="0" dy="2"/>
-          <feGaussianBlur stdDeviation="3" result="offset-blur"/>
-          <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
-          <feFlood floodColor="black" floodOpacity="0.2" result="color"/>
-          <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
-          <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+          <feOffset dx="0" dy="2" />
+          <feGaussianBlur stdDeviation="3" result="offset-blur" />
+          <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+          <feFlood floodColor="black" floodOpacity="0.2" result="color" />
+          <feComposite operator="in" in="color" in2="inverse" result="shadow" />
+          <feComposite operator="over" in="shadow" in2="SourceGraphic" />
         </filter>
       </defs>
 
       {/* Area rectangle with inner shadow for recessed look */}
       <rect x={pos.x} y={pos.y} width={width} height={depth}
         fill={fill}
-        stroke={stroke} strokeWidth={selected ? 2 : 1}
+        stroke={stroke} strokeWidth={selected ? 8 : 5}
         filter={`url(#inner-shadow-wa-${element.id})`} />
 
       {/* Label */}

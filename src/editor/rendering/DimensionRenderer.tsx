@@ -26,7 +26,7 @@ export const DimensionRenderer: React.FC<DimensionRendererProps> = ({ dimensions
 type DimLineProps = { dim: AutoDimension; zoom: number }
 
 const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
-  const { orientation, startPoint: sp, endPoint: ep, offset, label } = dim
+  const { orientation, kind, startPoint: sp, endPoint: ep, offset, label } = dim
 
   // Compute the dimension line positions
   let lx1: number, ly1: number, lx2: number, ly2: number
@@ -57,7 +57,10 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
     ext2x1 = ep.x; ext2y1 = ep.y; ext2x2 = lx2; ext2y2 = ep.y
   }
 
-  const dimColor = '#1971c2'
+  const dimColor =
+    kind === 'countertop' ? '#1971c2' :
+    kind === 'element'    ? '#0ca678' :
+                            '#e8590c' // gap
   const fontSize = FONT_SIZE
   const tickLen = TICK_SIZE
 
