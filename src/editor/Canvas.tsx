@@ -184,11 +184,11 @@ function applyResize(
     if (!originalLGeo) return  // safety guard
     const result = applyLResize(handle as LHandle, originalLGeo, actualDx, actualDy, MIN_DIM)
     store.updateElement(el.id, {
-      position: { x: result.px, y: result.py },
+      position: { x: Math.round(result.px / 5) * 5, y: Math.round(result.py / 5) * 5 },
       geometry: {
         type: 'l-shape',
-        segmentA: { width: result.aW, depth: result.aD },
-        segmentB: { width: result.bW, depth: result.bD },
+        segmentA: { width: Math.round(result.aW / 5) * 5, depth: Math.round(result.aD / 5) * 5 },
+        segmentB: { width: Math.round(result.bW / 5) * 5, depth: Math.round(result.bD / 5) * 5 },
       },
     } as Partial<CountertopElement>)
     return
@@ -201,8 +201,8 @@ function applyResize(
   if (handle.includes('w')) { nx = ob.x + actualDx; nw = Math.max(MIN_DIM, ob.width  - actualDx) }
   if (handle.includes('n')) { ny = ob.y + actualDy; nh = Math.max(MIN_DIM, ob.height - actualDy) }
 
-  nx = Math.round(nx); ny = Math.round(ny)
-  nw = Math.round(nw); nh = Math.round(nh)
+  nx = Math.round(nx / 5) * 5; ny = Math.round(ny / 5) * 5
+  nw = Math.round(nw / 5) * 5; nh = Math.round(nh / 5) * 5
 
   switch (el.type) {
     case 'countertop':
@@ -426,7 +426,6 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
           let nx = orig.x + dx
           let ny = orig.y + dy
 
-          // Clamp to parent bounds if it is a child
           if ('parentId' in el && (el as any).parentId) {
             const parent = elements.find(p => p.id === (el as any).parentId)
             const pBounds = parent ? getElementBounds(parent) : null
@@ -436,6 +435,9 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
                ny = Math.max(pBounds.y, Math.min(ny, pBounds.y + pBounds.height - eBounds.height))
             }
           }
+
+          nx = Math.round(nx / 5) * 5
+          ny = Math.round(ny / 5) * 5
 
           store.updateElement(id, { position: { x: nx, y: ny } })
         })

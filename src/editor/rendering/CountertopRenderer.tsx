@@ -130,7 +130,7 @@ type CountertopLabelProps = {
 }
 
 function fmtCm(mm: number): string {
-  return `${(mm / 10).toFixed(0)} cm`
+  return `${parseFloat((mm / 10).toFixed(1))}cm`
 }
 
 const CountertopLabel: React.FC<CountertopLabelProps> = ({ cx, cy, materialName, width, depth }) => {

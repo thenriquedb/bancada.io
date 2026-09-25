@@ -20,13 +20,13 @@ export type AutoDimension = {
 function fmt(mm: number, unit: Unit): string {
   const v = fromMm(mm, unit)
   const d = unit === 'm' ? 3 : unit === 'cm' ? 1 : 0
-  return `${v.toFixed(d)} ${unit}`
+  return `${parseFloat(v.toFixed(d))} ${unit}`
 }
 
 // ─── Auto-dimension generator ─────────────────────────────────────────────────
 
-const DIM_OFFSET_PRIMARY   = -80   // mm above/left for overall dims
-const DIM_OFFSET_SECONDARY = -40   // mm for secondary dims
+const DIM_OFFSET_PRIMARY = -50   // mm above/left for overall dims
+const DIM_OFFSET_SECONDARY = -25   // mm for secondary dims
 
 /**
  * Generate automatic dimension lines for a countertop and all its children.
@@ -39,11 +39,11 @@ export function generateAutoDimensions(
 ): AutoDimension[] {
   const dims: AutoDimension[] = []
   const pos = parent.position
-  
+
   let pW = 0, pH = 0
   let isLShape = false
   let g: CountertopGeometry | undefined
-  
+
   if (parent.type === 'countertop') {
     g = parent.geometry
     pW = g.type === 'reta' ? g.width : g.segmentA.width
@@ -62,7 +62,7 @@ export function generateAutoDimensions(
       orientation: 'horizontal',
       kind: 'countertop',
       startPoint: { x: pos.x, y: pos.y },
-      endPoint:   { x: pos.x + pW, y: pos.y },
+      endPoint: { x: pos.x + pW, y: pos.y },
       offset: DIM_OFFSET_PRIMARY,
       value: pW,
       label: fmt(pW, unit),
@@ -70,13 +70,13 @@ export function generateAutoDimensions(
 
     // ── Overall height ───────────────────────────────────────────────────────
     const xDepth = isLShape ? pos.x : pos.x + pW
-    const offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 70
+    const offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 50
     dims.push({
       id: `dim-${parent.id}-depth`,
       orientation: 'vertical',
       kind: 'countertop',
       startPoint: { x: xDepth, y: pos.y },
-      endPoint:   { x: xDepth, y: pos.y + pH },
+      endPoint: { x: xDepth, y: pos.y + pH },
       offset: offsetDepth,
       value: pH,
       label: fmt(pH, unit),
@@ -92,8 +92,8 @@ export function generateAutoDimensions(
         orientation: 'vertical',
         kind: 'countertop',
         startPoint: { x: pos.x + sA.width, y: pos.y },
-        endPoint:   { x: pos.x + sA.width, y: pos.y + sA.depth },
-        offset: 40,
+        endPoint: { x: pos.x + sA.width, y: pos.y + sA.depth },
+        offset: 25,
         value: sA.depth,
         label: fmt(sA.depth, unit),
       })
@@ -104,8 +104,8 @@ export function generateAutoDimensions(
         orientation: 'vertical',
         kind: 'countertop',
         startPoint: { x: pos.x + sB.width, y: pos.y + sA.depth },
-        endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
-        offset: 40,
+        endPoint: { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
+        offset: 25,
         value: sB.depth,
         label: fmt(sB.depth, unit),
       })
@@ -116,8 +116,8 @@ export function generateAutoDimensions(
         orientation: 'horizontal',
         kind: 'countertop',
         startPoint: { x: pos.x, y: pos.y + sA.depth + sB.depth },
-        endPoint:   { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
-        offset: 40,
+        endPoint: { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
+        offset: 25,
         value: sB.width,
         label: fmt(sB.width, unit),
       })
@@ -149,7 +149,7 @@ export function generateAutoDimensions(
         orientation: 'horizontal',
         kind: 'gap',
         startPoint: { x: leftBound, y: bounds.y + bounds.height / 2 },
-        endPoint:   { x: bounds.x, y: bounds.y + bounds.height / 2 },
+        endPoint: { x: bounds.x, y: bounds.y + bounds.height / 2 },
         offset: childDimOffset,
         value: dLeft,
         label: fmt(dLeft, unit),
@@ -164,7 +164,7 @@ export function generateAutoDimensions(
         orientation: 'horizontal',
         kind: 'element',
         startPoint: { x: bounds.x, y: bounds.y },
-        endPoint:   { x: bounds.x + bounds.width, y: bounds.y },
+        endPoint: { x: bounds.x + bounds.width, y: bounds.y },
         offset: DIM_OFFSET_SECONDARY, // width can stay secondary since it's only drawn once
         value: bounds.width,
         label: fmt(bounds.width, unit),
@@ -179,7 +179,7 @@ export function generateAutoDimensions(
         orientation: 'vertical',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: pos.y },
-        endPoint:   { x: bounds.x + bounds.width, y: bounds.y },
+        endPoint: { x: bounds.x + bounds.width, y: bounds.y },
         offset: -childDimOffset, // vertical offsets are typically positive or negative based on side. Using -childDimOffset pushes it right.
         value: dTop,
         label: fmt(dTop, unit),
@@ -189,15 +189,15 @@ export function generateAutoDimensions(
     // Find precise right and bottom edges of parent depending on where the child is
     let pRight = pos.x + pW
     let pBottom = pos.y + pH
-    
+
     if (isLShape && g && g.type === 'l-shape') {
       const cx = bounds.x + bounds.width / 2
       const cy = bounds.y + bounds.height / 2
-      
-      pBottom = (cx < pos.x + g.segmentB.width) 
+
+      pBottom = (cx < pos.x + g.segmentB.width)
         ? pos.y + g.segmentA.depth + g.segmentB.depth
         : pos.y + g.segmentA.depth
-        
+
       pRight = (cy > pos.y + g.segmentA.depth)
         ? pos.x + g.segmentB.width
         : pos.x + g.segmentA.width
@@ -219,7 +219,7 @@ export function generateAutoDimensions(
         orientation: 'horizontal',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
-        endPoint:   { x: rightBound, y: bounds.y + bounds.height / 2 },
+        endPoint: { x: rightBound, y: bounds.y + bounds.height / 2 },
         offset: childDimOffset,
         value: dRight,
         label: fmt(dRight, unit),
@@ -234,7 +234,7 @@ export function generateAutoDimensions(
         orientation: 'vertical',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
-        endPoint:   { x: bounds.x + bounds.width, y: pBottom },
+        endPoint: { x: bounds.x + bounds.width, y: pBottom },
         offset: -childDimOffset, // push it right
         value: dBottom,
         label: fmt(dBottom, unit),
