@@ -5,9 +5,10 @@ type WetAreaRendererProps = {
   element: WetAreaElement
   selected: boolean
   hovered: boolean
+  zoom?: number
 }
 
-export const WetAreaRenderer: React.FC<WetAreaRendererProps> = ({ element, selected, hovered }) => {
+export const WetAreaRenderer: React.FC<WetAreaRendererProps> = ({ element, selected, hovered, zoom = 1 }) => {
   const { position: pos, width, depth, recess } = element
   const cx = pos.x + width / 2
   const cy = pos.y + depth / 2
@@ -34,13 +35,13 @@ export const WetAreaRenderer: React.FC<WetAreaRendererProps> = ({ element, selec
         filter={`url(#inner-shadow-wa-${element.id})`} />
 
       {/* Label */}
-      <text x={cx} y={cy - 8} textAnchor="middle"
-        fontSize={Math.min(width, depth) * 0.05} fontFamily="Inter, sans-serif" fill="#555" fontWeight="500"
+      <text x={cx} y={cy - 12} textAnchor="middle"
+        fontSize={Math.max(Math.min(width, depth) * 0.09, 14 / zoom)} fontFamily="Inter, sans-serif" fill="#555" fontWeight="500"
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
         Área Molhada
       </text>
-      <text x={cx} y={cy + 14} textAnchor="middle"
-        fontSize={Math.min(width, depth) * 0.04} fontFamily="Inter, sans-serif" fill="#666"
+      <text x={cx} y={cy + 18} textAnchor="middle"
+        fontSize={Math.max(Math.min(width, depth) * 0.07, 10 / zoom)} fontFamily="Inter, sans-serif" fill="#666"
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
         Rebaixo {recess} mm
       </text>

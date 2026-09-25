@@ -25,8 +25,9 @@ function fmt(mm: number, unit: Unit): string {
 
 // ─── Auto-dimension generator ─────────────────────────────────────────────────
 
-const DIM_OFFSET_PRIMARY = -50   // mm above/left for overall dims
-const DIM_OFFSET_SECONDARY = -25   // mm for secondary dims
+const DIM_OFFSET_PRIMARY = -160   // mm above/left for overall dims
+const DIM_OFFSET_WETAREA = -100   // mm for wet area
+const DIM_OFFSET_ELEMENT = -50    // mm for sinks, cooktops
 
 /**
  * Generate automatic dimension lines for a countertop and all its children.
@@ -93,7 +94,7 @@ export function generateAutoDimensions(
         kind: 'countertop',
         startPoint: { x: pos.x + sA.width, y: pos.y },
         endPoint: { x: pos.x + sA.width, y: pos.y + sA.depth },
-        offset: 25,
+        offset: Math.abs(DIM_OFFSET_PRIMARY),
         value: sA.depth,
         label: fmt(sA.depth, unit),
       })
@@ -105,7 +106,7 @@ export function generateAutoDimensions(
         kind: 'countertop',
         startPoint: { x: pos.x + sB.width, y: pos.y + sA.depth },
         endPoint: { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
-        offset: 25,
+        offset: Math.abs(DIM_OFFSET_PRIMARY),
         value: sB.depth,
         label: fmt(sB.depth, unit),
       })
@@ -117,7 +118,7 @@ export function generateAutoDimensions(
         kind: 'countertop',
         startPoint: { x: pos.x, y: pos.y + sA.depth + sB.depth },
         endPoint: { x: pos.x + sB.width, y: pos.y + sA.depth + sB.depth },
-        offset: 25,
+        offset: Math.abs(DIM_OFFSET_PRIMARY),
         value: sB.width,
         label: fmt(sB.width, unit),
       })
@@ -130,8 +131,9 @@ export function generateAutoDimensions(
     const bounds = getElementBounds(child)
     if (!bounds) return
 
-    // Dynamic offset based on parent type to avoid overlap when both are drawn
-    const childDimOffset = parent.type === 'countertop' ? DIM_OFFSET_PRIMARY : DIM_OFFSET_SECONDARY
+    // Dynamic offset based on child type for its own width/depth, and parent type for gaps
+    const childDimOffset = child.type === 'wet-area' ? DIM_OFFSET_WETAREA : DIM_OFFSET_ELEMENT
+    const gapOffset = parent.type === 'countertop' ? DIM_OFFSET_PRIMARY : DIM_OFFSET_WETAREA
 
     // Distance from left edge of countertop (or nearest wet-area)
     let leftBound = pos.x
@@ -150,7 +152,7 @@ export function generateAutoDimensions(
         kind: 'gap',
         startPoint: { x: leftBound, y: bounds.y + bounds.height / 2 },
         endPoint: { x: bounds.x, y: bounds.y + bounds.height / 2 },
-        offset: childDimOffset,
+        offset: gapOffset,
         value: dLeft,
         label: fmt(dLeft, unit),
       })
@@ -165,7 +167,7 @@ export function generateAutoDimensions(
         kind: 'element',
         startPoint: { x: bounds.x, y: bounds.y },
         endPoint: { x: bounds.x + bounds.width, y: bounds.y },
-        offset: DIM_OFFSET_SECONDARY, // width can stay secondary since it's only drawn once
+        offset: childDimOffset,
         value: bounds.width,
         label: fmt(bounds.width, unit),
       })
@@ -180,7 +182,7 @@ export function generateAutoDimensions(
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: pos.y },
         endPoint: { x: bounds.x + bounds.width, y: bounds.y },
-        offset: -childDimOffset, // vertical offsets are typically positive or negative based on side. Using -childDimOffset pushes it right.
+        offset: -gapOffset, // vertical offsets are typically positive or negative based on side. Using -gapOffset pushes it right.
         value: dTop,
         label: fmt(dTop, unit),
       })
@@ -220,7 +222,7 @@ export function generateAutoDimensions(
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
         endPoint: { x: rightBound, y: bounds.y + bounds.height / 2 },
-        offset: childDimOffset,
+        offset: gapOffset,
         value: dRight,
         label: fmt(dRight, unit),
       })
@@ -235,7 +237,7 @@ export function generateAutoDimensions(
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
         endPoint: { x: bounds.x + bounds.width, y: pBottom },
-        offset: -childDimOffset, // push it right
+        offset: -gapOffset, // push it right
         value: dBottom,
         label: fmt(dBottom, unit),
       })

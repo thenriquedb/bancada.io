@@ -6,8 +6,8 @@ type DimensionRendererProps = {
   zoom: number  // used for text scaling
 }
 
-const TICK_SIZE = 8  // mm
-const FONT_SIZE = 22 // mm
+const TICK_SIZE = 16  // mm
+const FONT_SIZE = 40 // mm
 
 /**
  * Renders CAD-style dimension lines in world space (mm).
@@ -61,8 +61,11 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
     kind === 'countertop' ? '#1971c2' :
     kind === 'element'    ? '#0ca678' :
                             '#e8590c' // gap
-  const fontSize = FONT_SIZE
-  const tickLen = TICK_SIZE
+  const fontSize = Math.max(40, 14 / zoom)
+  const tickLen = Math.max(16, 6 / zoom)
+  const strokeDim = Math.max(2, 1.5 / zoom)
+  const strokeTick = Math.max(3, 2 / zoom)
+  const strokeExt = Math.max(1.5, 1 / zoom)
 
   // Tick marks (small perpendicular lines at each end)
   const tickProps = orientation === 'horizontal'
@@ -73,22 +76,22 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
     <g className="dimension" opacity={0.9}>
       {/* Extension lines */}
       <line x1={ext1x1} y1={ext1y1} x2={ext1x2} y2={ext1y2}
-        stroke={dimColor} strokeWidth={0.8} strokeDasharray="4 2" />
+        stroke={dimColor} strokeWidth={strokeExt} strokeDasharray="4 2" />
       <line x1={ext2x1} y1={ext2y1} x2={ext2x2} y2={ext2y2}
-        stroke={dimColor} strokeWidth={0.8} strokeDasharray="4 2" />
+        stroke={dimColor} strokeWidth={strokeExt} strokeDasharray="4 2" />
 
       {/* Dimension line */}
-      <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={dimColor} strokeWidth={1} />
+      <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={dimColor} strokeWidth={strokeDim} />
 
       {/* Tick marks at start */}
       <line x1={lx1 - tickProps.dx / 2} y1={ly1 - tickProps.dy / 2}
             x2={lx1 + tickProps.dx / 2} y2={ly1 + tickProps.dy / 2}
-        stroke={dimColor} strokeWidth={1.5} />
+        stroke={dimColor} strokeWidth={strokeTick} />
 
       {/* Tick marks at end */}
       <line x1={lx2 - tickProps.dx / 2} y1={ly2 - tickProps.dy / 2}
             x2={lx2 + tickProps.dx / 2} y2={ly2 + tickProps.dy / 2}
-        stroke={dimColor} strokeWidth={1.5} />
+        stroke={dimColor} strokeWidth={strokeTick} />
 
       {/* Text background for readability */}
       <rect

@@ -6,9 +6,10 @@ type TrashRendererProps = {
   selected: boolean
   hovered: boolean
   hasError?: boolean
+  zoom?: number
 }
 
-export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected, hovered, hasError }) => {
+export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected, hovered, hasError, zoom = 1 }) => {
   const { position: pos, shape } = element
   const stroke = hasError ? '#ef4444' : selected ? '#1971c2' : hovered ? '#339af0' : '#666666'
   const fill = selected ? '#dbeafe' : hovered ? '#e7f5ff' : '#e8e8e8'
@@ -50,8 +51,8 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
         {/* Lid (half open) */}
         <path d={`M ${pos.x - r*0.75} ${pos.y} A ${r*0.75} ${r*0.75} 0 0 1 ${pos.x + r*0.75} ${pos.y}`} fill={`url(#${gradId})`} stroke="#ccc" strokeWidth="1" />
 
-        <text x={pos.x} y={pos.y + r + 16} textAnchor="middle"
-          fontSize={Math.max(r * 0.3, 10)} fontFamily="Inter, sans-serif" fill="#555"
+        <text x={pos.x} y={pos.y + r + 24} textAnchor="middle"
+          fontSize={Math.max(r * 0.3, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#555"
           style={{ userSelect: 'none', pointerEvents: 'none' }}>
           Lixeira Ø{element.diameter ?? 250}
         </text>
@@ -95,8 +96,8 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
       {/* Rectangular Lid (half open) */}
       <rect x={pos.x + 8} y={pos.y + 8} width={w - 16} height={(d - 16) / 2} rx={6} fill={`url(#${gradId})`} stroke="#ccc" strokeWidth="1" />
 
-      <text x={cx} y={pos.y + d + 18} textAnchor="middle"
-        fontSize={Math.min(w, d) * 0.12} fontFamily="Inter, sans-serif" fill="#555"
+      <text x={cx} y={pos.y + d + 24} textAnchor="middle"
+        fontSize={Math.max(Math.min(w, d) * 0.12, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#555"
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
         Lixeira {w}×{d}
       </text>

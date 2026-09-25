@@ -6,9 +6,10 @@ type CooktopRendererProps = {
   selected: boolean
   hovered: boolean
   hasError?: boolean
+  zoom?: number
 }
 
-export const CooktopRenderer: React.FC<CooktopRendererProps> = ({ element, selected, hovered, hasError }) => {
+export const CooktopRenderer: React.FC<CooktopRendererProps> = ({ element, selected, hovered, hasError, zoom = 1 }) => {
   const { position: pos, width, depth } = element
 
   // Lighter, cleaner background matching the app's aesthetic
@@ -61,7 +62,7 @@ export const CooktopRenderer: React.FC<CooktopRendererProps> = ({ element, selec
 
       {/* Label */}
       <text x={pos.x + width / 2} y={pos.y + 20} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.min(width, depth) * 0.08} fontFamily="Inter, sans-serif" fill="#868e96"
+        fontSize={Math.max(Math.min(width, depth) * 0.12, 14 / zoom)} fontFamily="Inter, sans-serif" fill="#868e96"
         style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 500 }}>
         Cooktop
       </text>

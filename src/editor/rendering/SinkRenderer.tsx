@@ -6,9 +6,10 @@ type SinkRendererProps = {
   selected: boolean
   hovered: boolean
   hasError?: boolean
+  zoom?: number
 }
 
-export const SinkRenderer: React.FC<SinkRendererProps> = ({ element, selected, hovered, hasError }) => {
+export const SinkRenderer: React.FC<SinkRendererProps> = ({ element, selected, hovered, hasError, zoom = 1 }) => {
   const { position: pos, width, depth } = element
 
   const outerFill = selected ? '#dbeafe' : hovered ? '#eff6ff' : '#c8e6fa'
@@ -77,8 +78,8 @@ export const SinkRenderer: React.FC<SinkRendererProps> = ({ element, selected, h
 
       {/* Label */}
       <text x={cx} y={pos.y + depth - innerMargin / 2} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.min(width, depth) * 0.05} fontFamily="Inter, sans-serif" fill="#555"
-        stroke="#ffffff" strokeWidth={2} paintOrder="stroke fill" strokeOpacity={0.8}
+        fontSize={Math.max(Math.min(width, depth) * 0.1, 14 / zoom)} fontFamily="Inter, sans-serif" fill="#555"
+        stroke="#ffffff" strokeWidth={3} paintOrder="stroke fill" strokeOpacity={0.8}
         style={{ userSelect: 'none', pointerEvents: 'none' }}>
         Cuba {width}×{depth}
       </text>

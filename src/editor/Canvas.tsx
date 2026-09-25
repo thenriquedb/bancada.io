@@ -664,6 +664,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
               selected={selectedIds.includes(el.id)}
               hovered={hoveredId === el.id}
               hasError={hasError}
+              zoom={viewport.zoom}
             />
           )
         })}
@@ -732,24 +733,25 @@ type ElementRendererProps = {
   selected: boolean
   hovered:  boolean
   hasError: boolean
+  zoom:     number
 }
 
-const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, hovered, hasError }) => {
+const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, hovered, hasError, zoom }) => {
   if (!element.visible) return null
 
   switch (element.type) {
     case 'countertop':
       return <CountertopRenderer element={element} selected={selected} hovered={hovered} />
     case 'sink':
-      return <SinkRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
+      return <SinkRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} zoom={zoom} />
     case 'cooktop':
-      return <CooktopRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
+      return <CooktopRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} zoom={zoom} />
     case 'faucet':
       return <FaucetRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
     case 'trash':
-      return <TrashRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
+      return <TrashRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} zoom={zoom} />
     case 'wet-area':
-      return <WetAreaRenderer element={element} selected={selected} hovered={hovered} />
+      return <WetAreaRenderer element={element} selected={selected} hovered={hovered} zoom={zoom} />
     case 'backsplash':
       return <BacksplashRenderer element={element} selected={selected} hovered={hovered} />
     case 'dimension':
