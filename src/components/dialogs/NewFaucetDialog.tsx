@@ -45,7 +45,11 @@ export const NewFaucetDialog: React.FC = () => {
   }
 
   return (
-    <Modal title="Novo Furo de Torneira" onClose={() => store.setOpenDialog(null)}>
+    <Modal 
+      title="Nova Torneira" 
+      description="Defina o diâmetro e a posição do furo da torneira."
+      onClose={() => store.setOpenDialog(null)}
+    >
       <FormSection title="Dimensões">
         <FormField label="Diâmetro do furo" unit={unit} tooltip="O diâmetro do furo necessário para passar a torneira.">
           <input id="faucet-diameter" type="number" min={0} step={step} value={diameter}
@@ -62,18 +66,17 @@ export const NewFaucetDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
-      <FormSection title={`Posição a partir da borda (${unit})`}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Ajuste fino da posição:</span>
+      <FormSection title="Posição">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
           <button className="btn btn--ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={handleAutoCenter} disabled={!parentId} type="button">
-            Centralizar Automaticamente
+            Centralizar na área do pai
           </button>
         </div>
-        <FormField label="Dist. esquerda X" unit={unit}>
+        <FormField label="Distância da borda esquerda" unit={unit}>
           <input id="faucet-pos-x" type="number" min={0} step={step} value={posX}
             onChange={(e) => setPosX(Number(e.target.value))} />
         </FormField>
-        <FormField label="Dist. superior Y" unit={unit}>
+        <FormField label="Distância da borda superior" unit={unit}>
           <input id="faucet-pos-y" type="number" min={0} step={step} value={posY}
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>

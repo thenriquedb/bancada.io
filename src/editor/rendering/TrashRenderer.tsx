@@ -28,11 +28,12 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
         {/* Inner hole */}
         <circle cx={pos.x} cy={pos.y} r={r * 0.8} fill="transparent" stroke={stroke} strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
 
-        <text x={pos.x} y={pos.y + r + 24} textAnchor="middle"
-          fontSize={Math.max(r * 0.25, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
-          style={{ userSelect: 'none', pointerEvents: 'none' }}>
+        <text x={pos.x} y={pos.y - 6} textAnchor="middle" dominantBaseline="middle"
+          fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+          style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+          stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
           LIXEIRA
-          <tspan x={pos.x} dy={Math.max(r * 0.3, 16 / zoom)} fontWeight="400" fontSize={Math.max(r * 0.2, 10 / zoom)} fill="#868e96">Ø{element.diameter ?? 250} mm</tspan>
+          <tspan x={pos.x} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">Ø{element.diameter ?? 250} mm</tspan>
         </text>
       </g>
     )
@@ -54,11 +55,12 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
       {/* Inner hole */}
       <rect x={pos.x + 8} y={pos.y + 8} width={w - 16} height={d - 16} rx={6} fill="transparent" stroke={stroke} strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
       
-      <text x={cx} y={pos.y + d + 24} textAnchor="middle"
-        fontSize={Math.max(Math.min(w, d) * 0.1, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
         LIXEIRA
-        <tspan x={cx} dy={Math.max(Math.min(w, d) * 0.12, 16 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(w, d) * 0.08, 10 / zoom)} fill="#868e96">{w} × {d} mm</tspan>
+        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{w} × {d} mm</tspan>
       </text>
     </g>
   )

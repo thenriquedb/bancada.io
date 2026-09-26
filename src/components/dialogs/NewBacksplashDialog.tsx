@@ -60,7 +60,11 @@ export const NewBacksplashDialog: React.FC = () => {
   const len = getLength()
 
   return (
-    <Modal title="Nova Rodabanca" onClose={() => store.setOpenDialog(null)}>
+    <Modal 
+      title="Nova Rodabanca" 
+      description="Defina as dimensões da rodabanca."
+      onClose={() => store.setOpenDialog(null)}
+    >
       <FormSection title="Dimensões">
         <FormField label="Altura" unit={unit} tooltip="A altura da rodabanca a partir da superfície da bancada.">
           <input id="bs-height" type="number" min={0} step={step} value={height}

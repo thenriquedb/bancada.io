@@ -111,53 +111,58 @@ export const NewLShapeDialog: React.FC = () => {
   const midBy = oy + saH + sbH / 2
 
   return (
-    <Modal title="Nova Bancada em L" onClose={() => store.setOpenDialog(null)} width={480}>
+    <Modal 
+      title="Nova Bancada em L" 
+      description="Defina as dimensões dos dois segmentos da bancada."
+      onClose={() => store.setOpenDialog(null)} 
+      width={480}
+    >
       {/* Proportional diagram */}
       <div className="lshape-diagram" aria-hidden="true">
         <svg viewBox={`0 0 ${dW} ${dH}`} width={dW} height={dH}>
-          <polygon points={pts} fill="#e8f4fd" stroke="#1971c2" strokeWidth="1.5" />
+          <polygon points={pts} fill="#f8fafc" stroke="#64748b" strokeWidth="2" strokeLinejoin="round" />
 
           {/* Segment A label */}
           {saW > 40 && saH > 12 && (
             <text x={midAx} y={midAy} textAnchor="middle" dominantBaseline="middle"
-              fontSize="9" fill="#1971c2" fontWeight="500">Seg A</text>
+              fontSize="10" fill="#64748b" fontWeight="600">SEGMENTO A</text>
           )}
           {/* Segment B label */}
           {sbW > 20 && sbH > 12 && (
             <text x={midBx} y={midBy} textAnchor="middle" dominantBaseline="middle"
-              fontSize="9" fill="#1971c2" fontWeight="500">Seg B</text>
+              fontSize="10" fill="#64748b" fontWeight="600">SEGMENTO B</text>
           )}
 
           {/* A.depth dimension (left side, full) */}
           <line x1={ox - 8} y1={oy} x2={ox - 8} y2={oy + saH}
-            stroke="#e67700" strokeWidth="1" />
-          <line x1={ox - 11} y1={oy}   x2={ox - 5} y2={oy}   stroke="#e67700" strokeWidth="1" />
-          <line x1={ox - 11} y1={oy + saH} x2={ox - 5} y2={oy + saH} stroke="#e67700" strokeWidth="1" />
-          <text x={ox - 14} y={(oy + oy + saH) / 2} textAnchor="end" dominantBaseline="middle"
-            fontSize="7.5" fill="#e67700">
+            stroke="#2563eb" strokeWidth="1.5" />
+          <line x1={ox - 12} y1={oy}   x2={ox - 4} y2={oy}   stroke="#2563eb" strokeWidth="1.5" />
+          <line x1={ox - 12} y1={oy + saH} x2={ox - 4} y2={oy + saH} stroke="#2563eb" strokeWidth="1.5" />
+          <text x={ox - 16} y={(oy + oy + saH) / 2} textAnchor="end" dominantBaseline="middle"
+            fontSize="9" fill="#2563eb" fontWeight="500">
             {aProfundidade.toFixed(unit === 'mm' ? 0 : 0)}{unit}
           </text>
 
           {/* B.length dimension (left side, below A) */}
           <line x1={ox - 8} y1={oy + saH} x2={ox - 8} y2={oy + saH + sbH}
-            stroke="#2f9e44" strokeWidth="1" />
-          <line x1={ox - 11} y1={oy + saH}      x2={ox - 5} y2={oy + saH}      stroke="#2f9e44" strokeWidth="1" />
-          <line x1={ox - 11} y1={oy + saH + sbH} x2={ox - 5} y2={oy + saH + sbH} stroke="#2f9e44" strokeWidth="1" />
+            stroke="#2563eb" strokeWidth="1.5" />
+          <line x1={ox - 12} y1={oy + saH}      x2={ox - 4} y2={oy + saH}      stroke="#2563eb" strokeWidth="1.5" />
+          <line x1={ox - 12} y1={oy + saH + sbH} x2={ox - 4} y2={oy + saH + sbH} stroke="#2563eb" strokeWidth="1.5" />
           {sbH > 10 && (
-            <text x={ox - 14} y={oy + saH + sbH / 2} textAnchor="end" dominantBaseline="middle"
-              fontSize="7.5" fill="#2f9e44">
+            <text x={ox - 16} y={oy + saH + sbH / 2} textAnchor="end" dominantBaseline="middle"
+              fontSize="9" fill="#2563eb" fontWeight="500">
               {bComprimento.toFixed(unit === 'mm' ? 0 : 0)}{unit}
             </text>
           )}
 
           {/* A.width dimension (top) */}
           <line x1={ox} y1={oy - 8} x2={ox + saW} y2={oy - 8}
-            stroke="#1971c2" strokeWidth="1" />
-          <line x1={ox}       y1={oy - 11} x2={ox}       y2={oy - 5} stroke="#1971c2" strokeWidth="1" />
-          <line x1={ox + saW} y1={oy - 11} x2={ox + saW} y2={oy - 5} stroke="#1971c2" strokeWidth="1" />
+            stroke="#2563eb" strokeWidth="1.5" />
+          <line x1={ox}       y1={oy - 12} x2={ox}       y2={oy - 4} stroke="#2563eb" strokeWidth="1.5" />
+          <line x1={ox + saW} y1={oy - 12} x2={ox + saW} y2={oy - 4} stroke="#2563eb" strokeWidth="1.5" />
           {saW > 30 && (
-            <text x={ox + saW / 2} y={oy - 12} textAnchor="middle" dominantBaseline="auto"
-              fontSize="7.5" fill="#1971c2">
+            <text x={ox + saW / 2} y={oy - 16} textAnchor="middle" dominantBaseline="auto"
+              fontSize="9" fill="#2563eb" fontWeight="500">
               {aComprimento.toFixed(unit === 'mm' ? 0 : 0)}{unit}
             </text>
           )}
@@ -177,7 +182,7 @@ export const NewLShapeDialog: React.FC = () => {
       </FormSection>
 
       {/* ── Segment B ─────────────────────────────────────────── */}
-      <FormSection title="Segmento B (coluna lateral)">
+      <FormSection title="Segmento B (retorno)">
         <FormField
           label="Comprimento"
           unit={unit}

@@ -27,11 +27,12 @@ export const CutoutRenderer: React.FC<CutoutRendererProps> = ({ element, selecte
         <line x1={cx - r * 0.7} y1={cy - r * 0.7} x2={cx + r * 0.7} y2={cy + r * 0.7} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
         <line x1={cx + r * 0.7} y1={cy - r * 0.7} x2={cx - r * 0.7} y2={cy + r * 0.7} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
         
-        <text x={cx} y={cy + r + 24} textAnchor="middle"
-          fontSize={Math.max(r * 0.25, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
-          style={{ userSelect: 'none', pointerEvents: 'none' }}>
+        <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
+          fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+          style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+          stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
           {label}
-          <tspan x={cx} dy={Math.max(r * 0.3, 16 / zoom)} fontWeight="400" fontSize={Math.max(r * 0.2, 10 / zoom)} fill="#868e96">Ø{element.diameter} mm</tspan>
+          <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">Ø{element.diameter} mm</tspan>
         </text>
       </g>
     )
@@ -49,11 +50,12 @@ export const CutoutRenderer: React.FC<CutoutRendererProps> = ({ element, selecte
       <line x1={pos.x + w * 0.1} y1={pos.y + d * 0.1} x2={pos.x + w * 0.9} y2={pos.y + d * 0.9} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
       <line x1={pos.x + w * 0.9} y1={pos.y + d * 0.1} x2={pos.x + w * 0.1} y2={pos.y + d * 0.9} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
       
-      <text x={cx} y={pos.y + d + 24} textAnchor="middle"
-        fontSize={Math.max(Math.min(w, d) * 0.1, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
+      <text x={cx} y={pos.y + d / 2 - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
         {label}
-        <tspan x={cx} dy={Math.max(Math.min(w, d) * 0.12, 16 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(w, d) * 0.08, 10 / zoom)} fill="#868e96">{w} × {d} mm</tspan>
+        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{w} × {d} mm</tspan>
       </text>
     </g>
   )

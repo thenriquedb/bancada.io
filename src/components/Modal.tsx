@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 
 type ModalProps = {
   title: string
+  description?: string
   onClose: () => void
   children: React.ReactNode
   width?: number
@@ -12,7 +13,7 @@ type ModalProps = {
  * Accessible modal dialog with backdrop.
  * Uses React portal to render outside the editor DOM tree.
  */
-export const Modal: React.FC<ModalProps> = ({ title, onClose, children, width = 400 }) => {
+export const Modal: React.FC<ModalProps> = ({ title, description, onClose, children, width = 400 }) => {
   const dialogRef  = useRef<HTMLDivElement>(null)
   // Keep a stable ref so the mount-only effect always calls the latest onClose
   // without re-running (which would steal focus from inputs on every keystroke)
@@ -39,14 +40,17 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, children, width = 
       <div
         ref={dialogRef}
         className="modal-dialog"
-        style={{ width }}
+        style={{ width, maxWidth: '100%' }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
       >
         <div className="modal-header">
-          <h2 className="modal-title">{title}</h2>
+          <div className="modal-header__text">
+            <h2 className="modal-title">{title}</h2>
+            {description && <p className="modal-description">{description}</p>}
+          </div>
           <button className="modal-close" onClick={onClose} aria-label="Fechar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>

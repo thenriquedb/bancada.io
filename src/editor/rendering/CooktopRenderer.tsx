@@ -48,11 +48,12 @@ export const CooktopRenderer: React.FC<CooktopRendererProps> = ({ element, selec
       <circle cx={pos.x + width / 2 + 20} cy={pos.y + depth - 20} r={4} fill={stroke} opacity={0.6} />
 
       {/* Label */}
-      <text x={pos.x + width / 2} y={pos.y + 20} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.1, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057"
-        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}>
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
         COOKTOP
-        <tspan x={pos.x + width / 2} dy={Math.max(Math.min(width, depth) * 0.12, 16 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(width, depth) * 0.08, 10 / zoom)} fill="#868e96">{width} × {depth} mm</tspan>
+        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{width} × {depth} mm</tspan>
       </text>
     </g>
   )

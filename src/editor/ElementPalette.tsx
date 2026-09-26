@@ -41,27 +41,27 @@ export const ElementPalette: React.FC = () => {
       <section className="palette-section">
         <h2 className="palette-section__title">Bancada</h2>
         <div className="palette-items">
-          <PaletteItem icon="▭" label="Reta" onClick={() => store.setOpenDialog('new-countertop')} />
-          <PaletteItem icon="⌐" label="Em L"  onClick={() => store.setOpenDialog('new-lshape')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="6" width="18" height="12" rx="2"/></svg>} label="Reta" onClick={() => store.setOpenDialog('new-countertop')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 5h14v5h-9v9H5V5z" strokeLinejoin="round"/></svg>} label="Em L"  onClick={() => store.setOpenDialog('new-lshape')} />
         </div>
       </section>
 
       <section className="palette-section">
         <h2 className="palette-section__title">Recortes</h2>
         <div className="palette-items">
-          <PaletteItem icon="⬚" label="Cuba"     onClick={() => store.setOpenDialog('new-sink')} />
-          <PaletteItem icon="⊞" label="Cooktop"  onClick={() => store.setOpenDialog('new-cooktop')} />
-          <PaletteItem icon="○" label="Torneira" onClick={() => store.setOpenDialog('new-faucet')} />
-          <PaletteItem icon="⊙" label="Lixeira"  onClick={() => store.setOpenDialog('new-trash')} />
-          <PaletteItem icon="◻" label="Recorte"  onClick={() => store.setOpenDialog('new-cutout')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="12" cy="12" r="2"/></svg>} label="Cuba"     onClick={() => store.setOpenDialog('new-sink')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg>} label="Cooktop"  onClick={() => store.setOpenDialog('new-cooktop')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22v-7l-2-2v-4a4 4 0 0 1 8 0v4l-2 2v7"/><path d="M9 7h6"/><path d="M12 2v2"/></svg>} label="Torneira" onClick={() => store.setOpenDialog('new-faucet')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>} label="Lixeira"  onClick={() => store.setOpenDialog('new-trash')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>} label="Recorte"  onClick={() => store.setOpenDialog('new-cutout')} />
         </div>
       </section>
 
       <section className="palette-section">
         <h2 className="palette-section__title">Acabamentos</h2>
         <div className="palette-items">
-          <PaletteItem icon="≋" label="Área Molhada" onClick={() => store.setOpenDialog('new-wet-area')} />
-          <PaletteItem icon="‖" label="Rodabanca"    onClick={() => store.setOpenDialog('new-backsplash')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M6 12h12"/></svg>} label="Área Molhada" onClick={() => store.setOpenDialog('new-wet-area')} />
+          <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18v3H3z"/><path d="M3 15h18v3H3z"/></svg>} label="Rodabanca"    onClick={() => store.setOpenDialog('new-backsplash')} />
         </div>
       </section>
 
@@ -234,10 +234,8 @@ export const ElementPalette: React.FC = () => {
   )
 }
 
-// ─── PaletteItem ─────────────────────────────────────────────────────────────
-
 type PaletteItemProps = {
-  icon: string
+  icon: React.ReactNode
   label: string
   onClick?: () => void
   disabled?: boolean

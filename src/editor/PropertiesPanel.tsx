@@ -133,63 +133,65 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
       </div>
       <div className="properties-body">
         {/* Position & Alignment */}
-        <PropGroup title="Posição">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Alinhamento</span>
-              <AlignmentToolbar element={element} store={store} />
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Coordenadas</span>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
-                  <span style={{ padding: '6px 8px', color: 'var(--text-3)', fontSize: 12, fontWeight: 600, borderRight: '1px solid var(--border)', userSelect: 'none' }}>X</span>
-                  <input type="number" step={1} value={Math.round(element.position.x)} onChange={(e) => updatePos('x', e.target.value)} 
-                    style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
-                </div>
-                <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
-                  <span style={{ padding: '6px 8px', color: 'var(--text-3)', fontSize: 12, fontWeight: 600, borderRight: '1px solid var(--border)', userSelect: 'none' }}>Y</span>
-                  <input type="number" step={1} value={Math.round(element.position.y)} onChange={(e) => updatePos('y', e.target.value)} 
-                    style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+        {element.type !== 'countertop' && (
+          <PropGroup title="Posição">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Alinhamento</span>
+                <AlignmentToolbar element={element} store={store} />
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Coordenadas</span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
+                    <span style={{ padding: '6px 8px', color: 'var(--text-3)', fontSize: 12, fontWeight: 600, borderRight: '1px solid var(--border)', userSelect: 'none' }}>X</span>
+                    <input type="number" step={1} value={Math.round(element.position.x)} onChange={(e) => updatePos('x', e.target.value)} 
+                      style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+                  </div>
+                  <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
+                    <span style={{ padding: '6px 8px', color: 'var(--text-3)', fontSize: 12, fontWeight: 600, borderRight: '1px solid var(--border)', userSelect: 'none' }}>Y</span>
+                    <input type="number" step={1} value={Math.round(element.position.y)} onChange={(e) => updatePos('y', e.target.value)} 
+                      style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Rotação</span>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
-                  <span style={{ padding: '6px 8px', color: 'var(--text-3)', display: 'flex', borderRight: '1px solid var(--border)' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 21H3v-5c0-4.4 3.6-8 8-8h9"/><path d="M17 4l4 4-4 4"/></svg>
-                  </span>
-                  <input type="number" step={1} value={element.rotation || 0}
-                    onChange={(e) => {
-                      const v = parseFloat(e.target.value)
-                      if (isNaN(v)) return
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-2)' }}>Rotação</span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flex: 1, background: 'var(--surface-2)', borderRadius: 6, border: '1px solid var(--border)', overflow: 'hidden', alignItems: 'center' }}>
+                    <span style={{ padding: '6px 8px', color: 'var(--text-3)', display: 'flex', borderRight: '1px solid var(--border)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 21H3v-5c0-4.4 3.6-8 8-8h9"/><path d="M17 4l4 4-4 4"/></svg>
+                    </span>
+                    <input type="number" step={1} value={element.rotation || 0}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value)
+                        if (isNaN(v)) return
+                        store.pushHistory()
+                        store.updateElement(element.id, { rotation: v % 360 })
+                      }}
+                      style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
+                  </div>
+                  <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <button className="align-btn" type="button" style={{ padding: '6px 8px' }} onClick={() => {
                       store.pushHistory()
-                      store.updateElement(element.id, { rotation: v % 360 })
-                    }}
-                    style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: '6px 8px', color: 'var(--text-1)', fontSize: 13, fontWeight: 500 }} />
-                </div>
-                <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                  <button className="align-btn" type="button" style={{ padding: '6px 8px' }} onClick={() => {
-                    store.pushHistory()
-                    store.updateElement(element.id, { rotation: ((element.rotation || 0) - 90) % 360 })
-                  }} title="Girar -90°">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18"/><path d="M12 3v18"/><path d="M16 8l-4-4-4 4"/></svg>
-                  </button>
-                  <button className="align-btn" type="button" style={{ padding: '6px 8px', borderLeft: '1px solid var(--border)' }} onClick={() => {
-                    store.pushHistory()
-                    store.updateElement(element.id, { rotation: ((element.rotation || 0) + 90) % 360 })
-                  }} title="Girar +90°">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12H3"/><path d="M16 16l-4 4-4-4"/></svg>
-                  </button>
+                      store.updateElement(element.id, { rotation: ((element.rotation || 0) - 90) % 360 })
+                    }} title="Girar -90°">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18"/><path d="M12 3v18"/><path d="M16 8l-4-4-4 4"/></svg>
+                    </button>
+                    <button className="align-btn" type="button" style={{ padding: '6px 8px', borderLeft: '1px solid var(--border)' }} onClick={() => {
+                      store.pushHistory()
+                      store.updateElement(element.id, { rotation: ((element.rotation || 0) + 90) % 360 })
+                    }} title="Girar +90°">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12H3"/><path d="M16 16l-4 4-4-4"/></svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </PropGroup>
+          </PropGroup>
+        )}
         
         {'parentId' in element && (() => {
           const parents = getValidParents(store.project.elements)
@@ -773,7 +775,8 @@ const DeleteBtn: React.FC<{ ids: string[] }> = ({ ids }) => {
   return (
     <button id="prop-delete-btn" className="prop-delete-btn"
       onClick={() => store.removeElements(ids)}>
-      🗑 Remover {ids.length > 1 ? `${ids.length} elementos` : 'elemento'}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      Remover {ids.length > 1 ? `${ids.length} elementos` : 'elemento'}
     </button>
   )
 }

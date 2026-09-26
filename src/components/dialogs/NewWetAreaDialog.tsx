@@ -49,7 +49,11 @@ export const NewWetAreaDialog: React.FC = () => {
   }
 
   return (
-    <Modal title="Nova Área Molhada" onClose={() => store.setOpenDialog(null)}>
+    <Modal 
+      title="Nova Área Molhada" 
+      description="Defina a área molhada (rebaixo) da bancada."
+      onClose={() => store.setOpenDialog(null)}
+    >
       <FormSection title="Dimensões">
         <FormField label="Largura" unit={unit} tooltip="A largura total da área com rebaixo.">
           <input id="wa-width" type="number" min={0} step={step} value={width}
@@ -74,18 +78,17 @@ export const NewWetAreaDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
-      <FormSection title={`Posição a partir da borda (${unit})`}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Ajuste fino da posição:</span>
+      <FormSection title="Posição">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
           <button className="btn btn--ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={handleAutoCenter} disabled={!parentId} type="button">
-            Centralizar Automaticamente
+            Centralizar na área do pai
           </button>
         </div>
-        <FormField label="X" unit={unit}>
+        <FormField label="Distância da borda esquerda" unit={unit}>
           <input id="wa-pos-x" type="number" min={0} step={step} value={posX}
             onChange={(e) => setPosX(Number(e.target.value))} />
         </FormField>
-        <FormField label="Y" unit={unit}>
+        <FormField label="Distância da borda superior" unit={unit}>
           <input id="wa-pos-y" type="number" min={0} step={step} value={posY}
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>

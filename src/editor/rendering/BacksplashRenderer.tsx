@@ -18,11 +18,12 @@ export const BacksplashRenderer: React.FC<BacksplashRendererProps> = ({ element,
       <rect x={pos.x} y={pos.y} width={length} height={height}
         fill={fill} stroke={stroke} strokeWidth={selected ? 2 : 1.5} />
 
-      <text x={pos.x + length / 2} y={pos.y + height / 2} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.max(Math.min(length, height) * 0.3, 10 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
+      <text x={pos.x + length / 2} y={pos.y + height / 2 - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
         RODABANCA
-        <tspan x={pos.x + length / 2} dy={Math.max(Math.min(length, height) * 0.4, 14 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(length, height) * 0.25, 8 / zoom)} fill="#868e96">{height} mm</tspan>
+        <tspan x={pos.x + length / 2} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{height} mm</tspan>
       </text>
     </g>
   )

@@ -25,11 +25,12 @@ export const WetAreaRenderer: React.FC<WetAreaRendererProps> = ({ element, selec
         strokeDasharray="8 8" />
 
       {/* Label */}
-      <text x={cx} y={cy - 5} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.09, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057" fontWeight="600"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
         ÁREA MOLHADA
-        <tspan x={cx} dy={Math.max(Math.min(width, depth) * 0.07, 16 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(width, depth) * 0.06, 10 / zoom)} fill="#868e96">REBAIXO {recess} mm</tspan>
+        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">REBAIXO {recess} mm</tspan>
       </text>
     </g>
   )

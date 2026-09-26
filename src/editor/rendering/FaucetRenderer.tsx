@@ -6,9 +6,10 @@ type FaucetRendererProps = {
   selected: boolean
   hovered: boolean
   hasError?: boolean
+  zoom?: number
 }
 
-export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selected, hovered, hasError }) => {
+export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selected, hovered, hasError, zoom = 1 }) => {
   const { position: pos, diameter } = element
   const r = diameter / 2
   const stroke = hasError ? '#ef4444' : selected ? '#1971c2' : hovered ? '#339af0' : '#555555'
@@ -51,10 +52,12 @@ export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selecte
         fill={`url(#${gradId})`} stroke={stroke} strokeWidth={1} />
 
       {/* Diameter label */}
-      <text x={pos.x} y={pos.y + r + 16} textAnchor="middle"
-        fontSize={Math.max(diameter * 0.25, 10)} fontFamily="Inter, sans-serif" fill="#555"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
-        Ø{diameter}
+      <text x={pos.x} y={pos.y - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
+        TORNEIRA
+        <tspan x={pos.x} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">Ø{diameter} mm</tspan>
       </text>
     </g>
   )

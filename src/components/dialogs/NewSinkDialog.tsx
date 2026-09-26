@@ -50,9 +50,13 @@ export const NewSinkDialog: React.FC = () => {
   }
 
   return (
-    <Modal title="Nova Cuba" onClose={() => store.setOpenDialog(null)}>
+    <Modal 
+      title="Nova Cuba" 
+      description="Defina as dimensões e a posição da cuba."
+      onClose={() => store.setOpenDialog(null)}
+    >
       {parents.length === 0 && (
-        <div className="dialog-warning">⚠ Crie uma bancada ou área molhada antes de adicionar uma cuba.</div>
+        <Callout type="warning">Crie uma bancada ou área molhada antes de adicionar uma cuba.</Callout>
       )}
 
       <FormSection title="Dimensões">
@@ -80,18 +84,17 @@ export const NewSinkDialog: React.FC = () => {
 
 
 
-      <FormSection title={`Posição a partir da borda (${unit})`}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Ajuste fino da posição:</span>
+      <FormSection title="Posição">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 4 }}>
           <button className="btn btn--ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={handleAutoCenter} disabled={!parentId} type="button">
-            Centralizar Automaticamente
+            Centralizar na área do pai
           </button>
         </div>
-        <FormField label="Dist. esquerda X" unit={unit}>
+        <FormField label="Distância da borda esquerda" unit={unit}>
           <input id="sink-pos-x" type="number" min={0} step={step} value={posX}
             onChange={(e) => setPosX(Number(e.target.value))} />
         </FormField>
-        <FormField label="Dist. superior Y" unit={unit}>
+        <FormField label="Distância da borda superior" unit={unit}>
           <input id="sink-pos-y" type="number" min={0} step={step} value={posY}
             onChange={(e) => setPosY(Number(e.target.value))} />
         </FormField>

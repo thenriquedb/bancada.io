@@ -46,12 +46,12 @@ export const SinkRenderer: React.FC<SinkRendererProps> = ({ element, selected, h
       <circle cx={cx} cy={cy} r={8} fill={stroke} opacity={0.4} />
 
       {/* Label */}
-      <text x={cx} y={pos.y + depth - innerMargin + 5} textAnchor="middle" dominantBaseline="middle"
-        fontSize={Math.max(Math.min(width, depth) * 0.08, 12 / zoom)} fontFamily="Inter, sans-serif" fill="#495057"
-        stroke="#ffffff" strokeWidth={3} paintOrder="stroke fill" strokeOpacity={0.8} fontWeight="600"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}>
+      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
+        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
+        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
         CUBA
-        <tspan x={cx} dy={Math.max(Math.min(width, depth) * 0.1, 16 / zoom)} fontWeight="400" fontSize={Math.max(Math.min(width, depth) * 0.06, 10 / zoom)} fill="#868e96">{width} × {depth} mm</tspan>
+        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{width} × {depth} mm</tspan>
       </text>
     </g>
   )

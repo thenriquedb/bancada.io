@@ -44,7 +44,11 @@ export const NewCountertopDialog: React.FC = () => {
   }
 
   return (
-    <Modal title="Nova Bancada Reta" onClose={() => store.setOpenDialog(null)}>
+    <Modal 
+      title="Nova Bancada Reta" 
+      description="Defina as dimensões principais e o material."
+      onClose={() => store.setOpenDialog(null)}
+    >
       <FormSection title="Dimensões Principais">
         <FormField label="Comprimento" unit={unit} tooltip="Tamanho total da bancada medido da esquerda para a direita.">
           <input
@@ -86,7 +90,7 @@ export const NewCountertopDialog: React.FC = () => {
       </Callout>
 
       <FormSection title="Material">
-        <FormField label="Material">
+        <FormField label="Material" tooltip="O material da bancada, define o padrão visual e de cálculos.">
           <select
             id="ct-material"
             value={materialId}
@@ -98,16 +102,6 @@ export const NewCountertopDialog: React.FC = () => {
           </select>
         </FormField>
       </FormSection>
-
-      <div className="form-preview">
-        <span className="form-preview__label">Pré-visualização:</span>
-        <span className="form-preview__value">
-          {width} × {depth} {unit} × {thickness} mm
-          <span style={{ color: '#888', fontSize: '11px', marginLeft: 8 }}>
-            ({Math.round(widthMm)} × {Math.round(depthMm)} mm)
-          </span>
-        </span>
-      </div>
 
       <FormActions>
         <BtnSecondary onClick={() => store.setOpenDialog(null)}>Cancelar</BtnSecondary>
