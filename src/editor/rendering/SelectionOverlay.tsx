@@ -185,7 +185,7 @@ export const SelectionOverlay: React.FC<SelectionOverlayProps> = ({
 
         // ── Standard bounding-box handles ────────────────────────────────
         const resizable = el.type === 'countertop' || el.type === 'sink' ||
-          el.type === 'cooktop' || el.type === 'wet-area' || el.type === 'backsplash'
+          el.type === 'cooktop' || el.type === 'wet-area' || el.type === 'backsplash' || el.type === 'cutout'
 
         const handles: HandleDef[] = resizable ? makeStdHandles(sx, sy, sw, sh) : []
 

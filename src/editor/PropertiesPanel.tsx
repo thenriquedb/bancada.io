@@ -16,6 +16,7 @@ import type {
   TrashElement,
   WetAreaElement,
   BacksplashElement,
+  CutoutElement,
 } from '../models/types.ts'
 import { getElementBounds, isInsideBounds } from './geometry/bounds.ts'
 import { getValidParents } from '../utils/elementHelpers.ts'
@@ -121,7 +122,7 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
   const typeLabel: Record<ProjectElement['type'], string> = {
     countertop: 'Bancada', sink: 'Cuba', cooktop: 'Cooktop', faucet: 'Torneira',
     trash: 'Lixeira', 'wet-area': 'Área Molhada', backsplash: 'Rodabanca',
-    dimension: 'Cota', annotation: 'Anotação',
+    cutout: 'Recorte', dimension: 'Cota', annotation: 'Anotação',
   }
 
   return (
@@ -224,6 +225,7 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
         {element.type === 'trash'      && <TrashProps el={element} unit={unit} store={store} />}
         {element.type === 'wet-area'   && <WetAreaProps el={element} unit={unit} store={store} />}
         {element.type === 'backsplash' && <BacksplashProps el={element} unit={unit} store={store} />}
+        {element.type === 'cutout'     && <CutoutProps el={element} unit={unit} store={store} />}
 
         <PropGroup title="Cotas Visíveis">
           <PropField label="Dimensões">
@@ -682,6 +684,69 @@ const BacksplashProps: React.FC<{ el: BacksplashElement } & PropsHelper> = ({ el
       </select>
     </PropField>
   </PropGroup>
+)
+
+const CutoutProps: React.FC<{ el: CutoutElement } & PropsHelper> = ({ el, store }) => (
+  <>
+    <PropGroup title="Aparência">
+      <PropField label="Nome">
+        <input type="text" value={el.label ?? 'RECORTE'}
+          onChange={(e) => store.updateElement(el.id, { label: e.target.value })} />
+      </PropField>
+      <PropField label="Cor">
+        <input type="color" value={el.color ?? '#ffffff'}
+          onChange={(e) => store.updateElement(el.id, { color: e.target.value })} style={{ padding: 0, height: 32 }} />
+      </PropField>
+    </PropGroup>
+    <PropGroup title="Recorte">
+      <PropField label="Formato">
+        <select value={el.shape}
+          onChange={(e) => {
+            const newShape = e.target.value as 'circular' | 'retangular' | 'retangular-arredondado'
+            const updates: Partial<CutoutElement> = { shape: newShape }
+            if (newShape === 'circular' && el.diameter === undefined) updates.diameter = Math.max(el.width ?? 200, el.depth ?? 200)
+            if (newShape !== 'circular' && (el.width === undefined || el.depth === undefined)) {
+              updates.width = el.diameter ?? 200
+              updates.depth = el.diameter ?? 200
+            }
+            if (newShape === 'retangular-arredondado' && el.radius === undefined) updates.radius = 30
+            store.updateElement(el.id, updates)
+          }}>
+          <option value="circular">Circular</option>
+          <option value="retangular">Retangular</option>
+          <option value="retangular-arredondado">Ret. Arredondado</option>
+        </select>
+      </PropField>
+      {el.shape === 'circular' && (
+        <PropField label="Diâmetro">
+          <input type="number" step={5} value={el.diameter ?? 100}
+            onChange={(e) => store.updateElement(el.id, { diameter: Number(e.target.value) })} />
+          <span className="prop-unit">mm</span>
+        </PropField>
+      )}
+      {(el.shape === 'retangular' || el.shape === 'retangular-arredondado') && (
+        <>
+          <PropField label="Largura">
+            <input type="number" step={5} value={el.width ?? 200}
+              onChange={(e) => store.updateElement(el.id, { width: Number(e.target.value) })} />
+            <span className="prop-unit">mm</span>
+          </PropField>
+          <PropField label="Profundidade">
+            <input type="number" step={5} value={el.depth ?? 200}
+              onChange={(e) => store.updateElement(el.id, { depth: Number(e.target.value) })} />
+            <span className="prop-unit">mm</span>
+          </PropField>
+        </>
+      )}
+      {el.shape === 'retangular-arredondado' && (
+        <PropField label="Raio (Curva)">
+          <input type="number" step={5} value={el.radius ?? 30}
+            onChange={(e) => store.updateElement(el.id, { radius: Number(e.target.value) })} />
+          <span className="prop-unit">mm</span>
+        </PropField>
+      )}
+    </PropGroup>
+  </>
 )
 
 // ─── Shared UI helpers ────────────────────────────────────────────────────────

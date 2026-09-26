@@ -119,6 +119,7 @@ export type CutoutElement = BaseElement & {
   depth?: number     // mm
   diameter?: number  // mm
   radius?: number    // mm
+  color?: string
   parentId: string
 }
 
