@@ -34,6 +34,13 @@ function getUnrotatedBounds(el: ProjectElement): Rect | null {
       const h = el.shape === 'circular' ? (el.diameter ?? 250) : (el.depth ?? 250)
       return { x: el.position.x - d / 2, y: el.position.y - h / 2, width: d, height: h }
     }
+    case 'cutout': {
+      if (el.shape === 'circular') {
+        const d = el.diameter ?? 100
+        return { x: el.position.x, y: el.position.y, width: d, height: d }
+      }
+      return { x: el.position.x, y: el.position.y, width: el.width ?? 200, height: el.depth ?? 200 }
+    }
     case 'wet-area':
       return { x: el.position.x, y: el.position.y, width: el.width, height: el.depth }
     case 'backsplash':

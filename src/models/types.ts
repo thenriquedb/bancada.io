@@ -112,6 +112,16 @@ export type BacksplashElement = BaseElement & {
   parentId: string
 }
 
+export type CutoutElement = BaseElement & {
+  type: 'cutout'
+  shape: 'circular' | 'retangular' | 'retangular-arredondado'
+  width?: number     // mm
+  depth?: number     // mm
+  diameter?: number  // mm
+  radius?: number    // mm
+  parentId: string
+}
+
 type DimensionElement = BaseElement & {
   type: 'dimension'
   orientation: 'horizontal' | 'vertical' | 'aligned'
@@ -135,6 +145,7 @@ export type ProjectElement =
   | TrashElement
   | WetAreaElement
   | BacksplashElement
+  | CutoutElement
   | DimensionElement
   | AnnotationElement
 

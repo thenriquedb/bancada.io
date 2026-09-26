@@ -53,6 +53,7 @@ export const ElementPalette: React.FC = () => {
           <PaletteItem icon="⊞" label="Cooktop"  onClick={() => store.setOpenDialog('new-cooktop')} />
           <PaletteItem icon="○" label="Torneira" onClick={() => store.setOpenDialog('new-faucet')} />
           <PaletteItem icon="⊙" label="Lixeira"  onClick={() => store.setOpenDialog('new-trash')} />
+          <PaletteItem icon="◻" label="Recorte"  onClick={() => store.setOpenDialog('new-cutout')} />
         </div>
       </section>
 

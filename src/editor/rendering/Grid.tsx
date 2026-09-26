@@ -46,7 +46,7 @@ export const Grid: React.FC<GridProps> = ({
   const oy = panY
 
   return (
-    <g role="presentation" aria-hidden="true" style={{ pointerEvents: 'none' }}>
+    <g className="grid" role="presentation" aria-hidden="true" style={{ pointerEvents: 'none' }}>
       {verticals}
       {horizontals}
       {ox >= 0 && ox <= canvasWidth && (

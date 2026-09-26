@@ -22,6 +22,7 @@ import { FaucetRenderer } from './rendering/FaucetRenderer.tsx'
 import { TrashRenderer } from './rendering/TrashRenderer.tsx'
 import { WetAreaRenderer } from './rendering/WetAreaRenderer.tsx'
 import { BacksplashRenderer } from './rendering/BacksplashRenderer.tsx'
+import { CutoutRenderer } from './rendering/CutoutRenderer.tsx'
 import { DimensionRenderer } from './rendering/DimensionRenderer.tsx'
 import { generateAutoDimensions } from './geometry/dimensions.ts'
 import type { Point, ProjectElement, CountertopElement, WetAreaElement, ValidationWarning } from '../models/types.ts'
@@ -86,7 +87,7 @@ function getResizeHandleAtScreen(
 
   // Standard bounding-box handles for other resizable types
   const resizable = el.type === 'countertop' || el.type === 'sink' ||
-    el.type === 'cooktop' || el.type === 'wet-area' || el.type === 'backsplash'
+    el.type === 'cooktop' || el.type === 'wet-area' || el.type === 'backsplash' || el.type === 'cutout'
   if (!resizable) return null
 
   const b = getElementBounds(el)
@@ -224,6 +225,14 @@ function applyResize(
       break
     case 'backsplash':
       store.updateElement(el.id, { position: { x: nx, y: ny }, length: nw, height: nh })
+      break
+    case 'cutout':
+      if (el.shape === 'circular') {
+        const d = Math.max(nw, nh) // keep it circular
+        store.updateElement(el.id, { position: { x: nx, y: ny }, diameter: d })
+      } else {
+        store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
+      }
       break
   }
 }
@@ -776,6 +785,8 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, ho
       return <WetAreaRenderer element={element} selected={selected} hovered={hovered} zoom={zoom} />
     case 'backsplash':
       return <BacksplashRenderer element={element} selected={selected} hovered={hovered} />
+    case 'cutout':
+      return <CutoutRenderer element={element} selected={selected} hovered={hovered} zoom={zoom} />
     case 'dimension':
       return null // handled via auto-dims
     case 'annotation':

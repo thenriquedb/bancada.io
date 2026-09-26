@@ -15,6 +15,7 @@ import { NewFaucetDialog } from '../components/dialogs/NewFaucetDialog.tsx'
 import { NewTrashDialog } from '../components/dialogs/NewTrashDialog.tsx'
 import { NewWetAreaDialog } from '../components/dialogs/NewWetAreaDialog.tsx'
 import { NewBacksplashDialog } from '../components/dialogs/NewBacksplashDialog.tsx'
+import { NewCutoutDialog } from '../components/dialogs/NewCutoutDialog.tsx'
 import { ConfirmDeleteDialog } from '../components/dialogs/ConfirmDeleteDialog.tsx'
 import { validateElements } from './geometry/validation.ts'
 import { exportProjectPDF, exportProjectImage } from '../pdf/generator.ts'
@@ -145,6 +146,7 @@ export const Editor: React.FC = () => {
       {openDialog === 'new-faucet'     && <NewFaucetDialog />}
       {openDialog === 'new-trash'      && <NewTrashDialog />}
       {openDialog === 'new-wet-area'   && <NewWetAreaDialog />}
+      {openDialog === 'new-cutout'     && <NewCutoutDialog />}
       {openDialog === 'new-backsplash' && <NewBacksplashDialog />}
       
       <ConfirmDeleteDialog />

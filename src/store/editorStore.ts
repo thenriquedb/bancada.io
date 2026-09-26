@@ -33,6 +33,7 @@ type EditorDialog =
   | 'new-trash'
   | 'new-wet-area'
   | 'new-backsplash'
+  | 'new-cutout'
   | 'new-annotation'
 
 // ─── History ─────────────────────────────────────────────────────────────────
