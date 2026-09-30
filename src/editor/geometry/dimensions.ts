@@ -1,5 +1,6 @@
 import type { ProjectElement, CountertopElement, WetAreaElement, CountertopGeometry, Point, Unit } from '../../models/types.ts'
 import { getElementBounds } from './bounds.ts'
+import { getElementReferenceBounds } from './segments.ts'
 import { fromMm } from '../../utils/units.ts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -137,18 +138,38 @@ export function generateAutoDimensions(
     // Note: visibility filtering is mostly handled by Canvas.tsx before passing children.
     const bounds = getElementBounds(child)
     if (!bounds) return
+    
+    const refBounds = getElementReferenceBounds(child, parent as any)
 
     // Dynamic offset based on child type for its own width/depth, and parent type for gaps
     const childDimOffset = child.type === 'wet-area' ? DIM_OFFSET_WETAREA : DIM_OFFSET_ELEMENT
     const gapOffset = parent.type === 'countertop' ? DIM_OFFSET_PRIMARY : DIM_OFFSET_WETAREA
 
-    // Distance from left edge of countertop (or nearest wet-area)
-    let leftBound = pos.x
+    // Helper to find wet area containing the child
+    let waContaining: ProjectElement | undefined
     if (parent.type === 'countertop' && child.type !== 'wet-area') {
-      const waToLeft = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.x + getElementBounds(c)!.width <= bounds.x)
-      if (waToLeft.length > 0) {
-        const closest = waToLeft.reduce((p, c) => (getElementBounds(c)!.x + getElementBounds(c)!.width > getElementBounds(p)!.x + getElementBounds(p)!.width) ? c : p)
-        leftBound = getElementBounds(closest)!.x + getElementBounds(closest)!.width
+      const cx = bounds.x + bounds.width / 2
+      const cy = bounds.y + bounds.height / 2
+      waContaining = children.find(c => {
+        if (c.type !== 'wet-area') return false
+        const wb = getElementBounds(c)!
+        return cx >= wb.x && cx <= wb.x + wb.width && cy >= wb.y && cy <= wb.y + wb.height
+      })
+    }
+
+    // Distance from left edge
+    let leftBound = refBounds.left
+    if (parent.type === 'countertop' && child.type !== 'wet-area') {
+      if (waContaining) {
+        leftBound = getElementBounds(waContaining)!.x
+      } else {
+        const waToLeft = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.x + getElementBounds(c)!.width <= bounds.x)
+        if (waToLeft.length > 0) {
+          const closest = waToLeft.reduce((p, c) => (getElementBounds(c)!.x + getElementBounds(c)!.width > getElementBounds(p)!.x + getElementBounds(p)!.width) ? c : p)
+          if (getElementBounds(closest)!.x >= refBounds.left) {
+            leftBound = getElementBounds(closest)!.x + getElementBounds(closest)!.width
+          }
+        }
       }
     }
     const dLeft = bounds.x - leftBound
@@ -166,9 +187,14 @@ export function generateAutoDimensions(
       })
     }
 
-    // Child width (only draw once, tied to direct parent)
+    // Child width
     const isDirect = '_isVisualDirect' in child ? (child as any)._isVisualDirect : ('parentId' in child && (child as any).parentId === parent.id)
-    if (bounds.width > 20 && child.dimSelf !== false && isDirect) {
+    let isCircular = false
+    if (child.type === 'faucet') isCircular = true
+    else if (child.type === 'trash' && child.shape === 'circular') isCircular = true
+    else if (child.type === 'cutout' && child.shape === 'circular') isCircular = true
+
+    if (bounds.width > 20 && child.dimSelf !== false && isDirect && !isCircular) {
       dims.push({
         id: `dim-${child.id}-width`,
         countertopId,
@@ -182,46 +208,50 @@ export function generateAutoDimensions(
       })
     }
 
-    // Distance from top edge of parent
-    const dTop = bounds.y - pos.y
-    if (dTop > 10 && dTop < pH && child.dimTop !== false) {
+    // Distance from top edge
+    let topBound = refBounds.top
+    if (parent.type === 'countertop' && child.type !== 'wet-area') {
+      if (waContaining) {
+        topBound = getElementBounds(waContaining)!.y
+      } else {
+        const waAbove = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.y + getElementBounds(c)!.height <= bounds.y)
+        if (waAbove.length > 0) {
+          const closest = waAbove.reduce((p, c) => (getElementBounds(c)!.y + getElementBounds(c)!.height > getElementBounds(p)!.y + getElementBounds(p)!.height) ? c : p)
+          if (getElementBounds(closest)!.y >= refBounds.top) {
+            topBound = getElementBounds(closest)!.y + getElementBounds(closest)!.height
+          }
+        }
+      }
+    }
+    const dTop = bounds.y - topBound
+    if (dTop > 10 && child.dimTop !== false) {
       dims.push({
         id: `dim-${child.id}-top-${parent.id}`,
         countertopId,
         orientation: 'vertical',
         kind: 'gap',
-        startPoint: { x: bounds.x + bounds.width, y: pos.y },
+        startPoint: { x: bounds.x + bounds.width, y: topBound },
         endPoint: { x: bounds.x + bounds.width, y: bounds.y },
-        offset: -gapOffset, // vertical offsets are typically positive or negative based on side. Using -gapOffset pushes it right.
+        offset: -gapOffset,
         value: dTop,
         label: fmt(dTop, unit),
       })
     }
 
-    // Find precise right and bottom edges of parent depending on where the child is
-    let pRight = pos.x + pW
-    let pBottom = pos.y + pH
-
-    if (isLShape && g && g.type === 'l-shape') {
-      const cx = bounds.x + bounds.width / 2
-      const cy = bounds.y + bounds.height / 2
-
-      pBottom = (cx < pos.x + g.segmentB.width)
-        ? pos.y + g.segmentA.depth + g.segmentB.depth
-        : pos.y + g.segmentA.depth
-
-      pRight = (cy > pos.y + g.segmentA.depth)
-        ? pos.x + g.segmentB.width
-        : pos.x + g.segmentA.width
-    }
-
-    // Distance from right edge of parent (or nearest wet-area)
-    let rightBound = pRight
+    // Distance from right edge
+    let rightBound = refBounds.right
     if (parent.type === 'countertop' && child.type !== 'wet-area') {
-      const waToRight = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.x >= bounds.x + bounds.width)
-      if (waToRight.length > 0) {
-        const closest = waToRight.reduce((p, c) => (getElementBounds(c)!.x < getElementBounds(p)!.x) ? c : p)
-        rightBound = getElementBounds(closest)!.x
+      if (waContaining) {
+        const wb = getElementBounds(waContaining)!
+        rightBound = wb.x + wb.width
+      } else {
+        const waToRight = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.x >= bounds.x + bounds.width)
+        if (waToRight.length > 0) {
+          const closest = waToRight.reduce((p, c) => (getElementBounds(c)!.x < getElementBounds(p)!.x) ? c : p)
+          if (getElementBounds(closest)!.x <= refBounds.right) {
+            rightBound = getElementBounds(closest)!.x
+          }
+        }
       }
     }
     const dRight = rightBound - (bounds.x + bounds.width)
@@ -239,8 +269,23 @@ export function generateAutoDimensions(
       })
     }
 
-    // Distance from bottom edge of countertop
-    const dBottom = pBottom - (bounds.y + bounds.height)
+    // Distance from bottom edge
+    let bottomBound = refBounds.bottom
+    if (parent.type === 'countertop' && child.type !== 'wet-area') {
+      if (waContaining) {
+        const wb = getElementBounds(waContaining)!
+        bottomBound = wb.y + wb.height
+      } else {
+        const waBelow = children.filter(c => c.type === 'wet-area' && getElementBounds(c)!.y >= bounds.y + bounds.height)
+        if (waBelow.length > 0) {
+          const closest = waBelow.reduce((p, c) => (getElementBounds(c)!.y < getElementBounds(p)!.y) ? c : p)
+          if (getElementBounds(closest)!.y + getElementBounds(closest)!.height <= refBounds.bottom) {
+            bottomBound = getElementBounds(closest)!.y
+          }
+        }
+      }
+    }
+    const dBottom = bottomBound - (bounds.y + bounds.height)
     if (dBottom > 10 && child.dimBottom !== false) {
       dims.push({
         id: `dim-${child.id}-bottom-${parent.id}`,
@@ -248,8 +293,8 @@ export function generateAutoDimensions(
         orientation: 'vertical',
         kind: 'gap',
         startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
-        endPoint: { x: bounds.x + bounds.width, y: pBottom },
-        offset: -gapOffset, // push it right
+        endPoint: { x: bounds.x + bounds.width, y: bottomBound },
+        offset: -gapOffset,
         value: dBottom,
         label: fmt(dBottom, unit),
       })

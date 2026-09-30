@@ -1,5 +1,6 @@
 import React from 'react'
 import type { CutoutElement } from '../../models/types.ts'
+import { SmallElementLabel, MIN_VISUAL_SIZE, HIT_AREA_SIZE, SMALL_ELEMENT_THRESHOLD } from './SmallElementLabel.tsx'
 
 type CutoutRendererProps = {
   element: CutoutElement
@@ -21,19 +22,31 @@ export const CutoutRenderer: React.FC<CutoutRendererProps> = ({ element, selecte
 
     return (
       <g>
+        {/* Hit Area */}
+        <circle cx={cx} cy={cy} r={Math.max(r, (HIT_AREA_SIZE / 2) / zoom)} fill="transparent" />
+
         {/* Fill the background with custom color or canvas color */}
-        <circle cx={cx} cy={cy} r={r} fill={color} stroke={strokeColor} strokeWidth={strokeWidth} />
-        {/* Cross hatch inside to denote cutout */}
-        <line x1={cx - r * 0.7} y1={cy - r * 0.7} x2={cx + r * 0.7} y2={cy + r * 0.7} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
-        <line x1={cx + r * 0.7} y1={cy - r * 0.7} x2={cx - r * 0.7} y2={cy + r * 0.7} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
+        <circle cx={cx} cy={cy} r={r} fill={color} stroke={strokeColor} strokeWidth={strokeWidth / zoom} />
         
-        <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
-          fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
-          style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
-          stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
-          {label}
-          <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">Ø{element.diameter} mm</tspan>
-        </text>
+        {/* Cross hatch inside to denote cutout (only if not small) */}
+        {r * 2 * zoom >= SMALL_ELEMENT_THRESHOLD && (
+          <>
+            <line x1={cx - r * 0.7} y1={cy - r * 0.7} x2={cx + r * 0.7} y2={cy + r * 0.7} stroke="#ced4da" strokeWidth={1 / zoom} strokeDasharray="4 4" />
+            <line x1={cx + r * 0.7} y1={cy - r * 0.7} x2={cx - r * 0.7} y2={cy + r * 0.7} stroke="#ced4da" strokeWidth={1 / zoom} strokeDasharray="4 4" />
+          </>
+        )}
+        
+        <SmallElementLabel
+          elementId={element.id}
+          cx={cx}
+          cy={cy}
+          worldWidth={element.diameter ?? 100}
+          worldHeight={element.diameter ?? 100}
+          zoom={zoom}
+          title={label}
+          subtitle={`Ø${element.diameter} mm`}
+          color={strokeColor}
+        />
       </g>
     )
   }
@@ -45,18 +58,38 @@ export const CutoutRenderer: React.FC<CutoutRendererProps> = ({ element, selecte
 
   return (
     <g>
-      <rect x={pos.x} y={pos.y} width={w} height={d} rx={rx} ry={rx} fill={color} stroke={strokeColor} strokeWidth={strokeWidth} />
-      {/* Cross hatch inside to denote cutout */}
-      <line x1={pos.x + w * 0.1} y1={pos.y + d * 0.1} x2={pos.x + w * 0.9} y2={pos.y + d * 0.9} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
-      <line x1={pos.x + w * 0.9} y1={pos.y + d * 0.1} x2={pos.x + w * 0.1} y2={pos.y + d * 0.9} stroke="#ced4da" strokeWidth={1} strokeDasharray="4 4" />
+      {/* Hit Area */}
+      <rect x={cx - Math.max(w/2, (HIT_AREA_SIZE / 2) / zoom)} y={pos.y + d/2 - Math.max(d/2, (HIT_AREA_SIZE / 2) / zoom)} width={Math.max(w, HIT_AREA_SIZE / zoom)} height={Math.max(d, HIT_AREA_SIZE / zoom)} fill="transparent" />
+
+      {/* Main Rect */}
+      <rect 
+        x={pos.x} 
+        y={pos.y} 
+        width={w} 
+        height={d} 
+        rx={rx} ry={rx} 
+        fill={color} stroke={strokeColor} strokeWidth={strokeWidth / zoom} 
+      />
       
-      <text x={cx} y={pos.y + d / 2 - 6} textAnchor="middle" dominantBaseline="middle"
-        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
-        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
-        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
-        {label}
-        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{w} × {d} mm</tspan>
-      </text>
+      {/* Cross hatch inside to denote cutout (only if not small) */}
+      {Math.min(w, d) * zoom >= SMALL_ELEMENT_THRESHOLD && (
+        <>
+          <line x1={pos.x + w * 0.1} y1={pos.y + d * 0.1} x2={pos.x + w * 0.9} y2={pos.y + d * 0.9} stroke="#ced4da" strokeWidth={1 / zoom} strokeDasharray="4 4" />
+          <line x1={pos.x + w * 0.9} y1={pos.y + d * 0.1} x2={pos.x + w * 0.1} y2={pos.y + d * 0.9} stroke="#ced4da" strokeWidth={1 / zoom} strokeDasharray="4 4" />
+        </>
+      )}
+      
+      <SmallElementLabel
+        elementId={element.id}
+        cx={cx}
+        cy={pos.y + d / 2}
+        worldWidth={w}
+        worldHeight={d}
+        zoom={zoom}
+        title={label}
+        subtitle={`${w} × ${d} mm`}
+        color={strokeColor}
+      />
     </g>
   )
 }

@@ -280,18 +280,41 @@ export const useEditorStore = create<EditorStore>()(
     cancelDelete: () => set({ pendingDelete: null }),
 
     duplicateElements: (ids) => {
+      if (ids.length === 0) return
       get().pushHistory()
       const { elements } = get().project
-      const originals = elements.filter((el) => ids.includes(el.id))
-      const offset = 20
-      const copies = originals.map((el) => ({
-        ...el,
-        id: generateId(el.type),
-        position: { x: el.position.x + offset, y: el.position.y + offset },
-      })) as ProjectElement[]
+      
+      const gatherElementHierarchy = (elements: ProjectElement[], topIds: string[]): ProjectElement[] => {
+        const result: ProjectElement[] = []
+        let currentIds = [...topIds]
+        while (currentIds.length > 0) {
+          const currentElements = elements.filter(el => currentIds.includes(el.id))
+          currentElements.forEach(el => { if (!result.find(r => r.id === el.id)) result.push(el) })
+          const children = elements.filter(el => 'parentId' in el && el.parentId && currentIds.includes(el.parentId))
+          currentIds = children.map(c => c.id).filter(id => !result.find(r => r.id === id))
+        }
+        return result
+      }
+
+      const allToCopy = gatherElementHierarchy(elements, ids)
+      if (allToCopy.length === 0) return
+
+      const offset = 100 // offset a bit larger so it doesn't overlap perfectly
+      const idMap = new Map<string, string>()
+      allToCopy.forEach(el => idMap.set(el.id, generateId(el.type)))
+
+      const copies = allToCopy.map((el) => {
+        const copy = { ...el, id: idMap.get(el.id)! }
+        if ('parentId' in copy && copy.parentId && idMap.has(copy.parentId)) {
+          ;(copy as any).parentId = idMap.get(copy.parentId)!
+        }
+        copy.position = { x: el.position.x + offset, y: el.position.y + offset }
+        return copy
+      }) as ProjectElement[]
+
       set((s) => ({
         project: { ...s.project, elements: [...s.project.elements, ...copies], updatedAt: nowISO() },
-        selectedIds: copies.map((c) => c.id),
+        selectedIds: copies.filter(c => ids.includes(Object.keys(Object.fromEntries(idMap)).find(k => idMap.get(k) === c.id)!)).map(c => c.id),
         isDirty: true,
       }))
     },
@@ -308,7 +331,18 @@ export const useEditorStore = create<EditorStore>()(
     // ── Clipboard ─────────────────────────────────────────────────────────
     copyToClipboard: (ids) => {
       const { elements } = get().project
-      const items = elements.filter((el) => ids.includes(el.id))
+      const gatherElementHierarchy = (elements: ProjectElement[], topIds: string[]): ProjectElement[] => {
+        const result: ProjectElement[] = []
+        let currentIds = [...topIds]
+        while (currentIds.length > 0) {
+          const currentElements = elements.filter(el => currentIds.includes(el.id))
+          currentElements.forEach(el => { if (!result.find(r => r.id === el.id)) result.push(el) })
+          const children = elements.filter(el => 'parentId' in el && el.parentId && currentIds.includes(el.parentId))
+          currentIds = children.map(c => c.id).filter(id => !result.find(r => r.id === id))
+        }
+        return result
+      }
+      const items = gatherElementHierarchy(elements, ids)
       set({ clipboard: items })
     },
 
@@ -316,15 +350,23 @@ export const useEditorStore = create<EditorStore>()(
       const { clipboard } = get()
       if (clipboard.length === 0) return
       get().pushHistory()
+      
       const offset = 30
-      const copies = clipboard.map((el) => ({
-        ...el,
-        id: generateId(el.type),
-        position: { x: el.position.x + offset, y: el.position.y + offset },
-      })) as ProjectElement[]
+      const idMap = new Map<string, string>()
+      clipboard.forEach(el => idMap.set(el.id, generateId(el.type)))
+
+      const copies = clipboard.map((el) => {
+        const copy = { ...el, id: idMap.get(el.id)! }
+        if ('parentId' in copy && copy.parentId && idMap.has(copy.parentId)) {
+          ;(copy as any).parentId = idMap.get(copy.parentId)!
+        }
+        copy.position = { x: el.position.x + offset, y: el.position.y + offset }
+        return copy
+      }) as ProjectElement[]
+
       set((s) => ({
         project: { ...s.project, elements: [...s.project.elements, ...copies], updatedAt: nowISO() },
-        selectedIds: copies.map((c) => c.id),
+        selectedIds: copies.filter(c => s.clipboard.find(orig => orig.id === [...idMap.entries()].find(e => e[1] === c.id)?.[0])).map((c) => c.id),
         isDirty: true,
       }))
     },

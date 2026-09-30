@@ -1,6 +1,7 @@
 import React from 'react'
 import type { TrashElement } from '../../models/types.ts'
 import { TRASH_FILL, TRASH_STROKE } from './constants.ts'
+import { SmallElementLabel, MIN_VISUAL_SIZE, HIT_AREA_SIZE, SMALL_ELEMENT_THRESHOLD } from './SmallElementLabel.tsx'
 
 type TrashRendererProps = {
   element: TrashElement
@@ -23,18 +24,27 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
         className="element element--trash"
         transform={element.rotation ? `rotate(${element.rotation} ${pos.x} ${pos.y})` : undefined}
       >
-        {/* Outer rim */}
-        <circle cx={pos.x} cy={pos.y} r={r} fill={fill} stroke={stroke} strokeWidth={strokeW} />
-        {/* Inner hole */}
-        <circle cx={pos.x} cy={pos.y} r={r * 0.8} fill="transparent" stroke={stroke} strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+        {/* Hit Area */}
+        <circle cx={pos.x} cy={pos.y} r={Math.max(r, (HIT_AREA_SIZE / 2) / zoom)} fill="transparent" />
 
-        <text x={pos.x} y={pos.y - 6} textAnchor="middle" dominantBaseline="middle"
-          fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
-          style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
-          stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
-          LIXEIRA
-          <tspan x={pos.x} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">Ø{element.diameter ?? 250} mm</tspan>
-        </text>
+        {/* Outer rim */}
+        <circle cx={pos.x} cy={pos.y} r={r} fill={fill} stroke={stroke} strokeWidth={strokeW / zoom} />
+        {/* Inner hole (only if not small) */}
+        {r * 2 * zoom >= SMALL_ELEMENT_THRESHOLD && (
+          <circle cx={pos.x} cy={pos.y} r={r * 0.8} fill="transparent" stroke={stroke} strokeWidth={1 / zoom} strokeDasharray="4 4" opacity={0.6} />
+        )}
+
+        <SmallElementLabel
+          elementId={element.id}
+          cx={pos.x}
+          cy={pos.y}
+          worldWidth={element.diameter ?? 250}
+          worldHeight={element.diameter ?? 250}
+          zoom={zoom}
+          title="LIXEIRA"
+          subtitle={`Ø${element.diameter ?? 250} mm`}
+          color={stroke}
+        />
       </g>
     )
   }
@@ -50,18 +60,33 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
       className="element element--trash"
       transform={element.rotation ? `rotate(${element.rotation} ${cx} ${cy})` : undefined}
     >
+      {/* Hit Area */}
+      <rect x={cx - Math.max(w/2, (HIT_AREA_SIZE / 2) / zoom)} y={pos.y + d/2 - Math.max(d/2, (HIT_AREA_SIZE / 2) / zoom)} width={Math.max(w, HIT_AREA_SIZE / zoom)} height={Math.max(d, HIT_AREA_SIZE / zoom)} fill="transparent" />
+
       {/* Outer rim */}
-      <rect x={pos.x} y={pos.y} width={w} height={d} rx={10} fill={fill} stroke={stroke} strokeWidth={strokeW} />
-      {/* Inner hole */}
-      <rect x={pos.x + 8} y={pos.y + 8} width={w - 16} height={d - 16} rx={6} fill="transparent" stroke={stroke} strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+      <rect 
+        x={pos.x} 
+        y={pos.y} 
+        width={w} 
+        height={d} 
+        rx={10 / zoom} fill={fill} stroke={stroke} strokeWidth={strokeW / zoom} 
+      />
+      {/* Inner hole (only if not small) */}
+      {Math.min(w, d) * zoom >= SMALL_ELEMENT_THRESHOLD && (
+        <rect x={pos.x + 8} y={pos.y + 8} width={w - 16} height={d - 16} rx={6 / zoom} fill="transparent" stroke={stroke} strokeWidth={1 / zoom} strokeDasharray="4 4" opacity={0.6} />
+      )}
       
-      <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="middle"
-        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
-        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
-        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
-        LIXEIRA
-        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{w} × {d} mm</tspan>
-      </text>
+      <SmallElementLabel
+        elementId={element.id}
+        cx={cx}
+        cy={cy}
+        worldWidth={w}
+        worldHeight={d}
+        zoom={zoom}
+        title="LIXEIRA"
+        subtitle={`${w} × ${d} mm`}
+        color={stroke}
+      />
     </g>
   )
 }

@@ -1,5 +1,6 @@
 import React from 'react'
 import type { FaucetElement } from '../../models/types.ts'
+import { SmallElementLabel, MIN_VISUAL_SIZE, HIT_AREA_SIZE, SMALL_ELEMENT_THRESHOLD } from './SmallElementLabel.tsx'
 
 type FaucetRendererProps = {
   element: FaucetElement
@@ -34,31 +35,43 @@ export const FaucetRenderer: React.FC<FaucetRendererProps> = ({ element, selecte
         </filter>
       </defs>
 
+      {/* Hit Area */}
+      <circle cx={pos.x} cy={pos.y} r={Math.max(r, (HIT_AREA_SIZE / 2) / zoom)} fill="transparent" />
+
       {/* Base shadow & circle */}
-      <circle cx={pos.x} cy={pos.y} r={r} fill={`url(#${gradId})`} stroke={stroke} strokeWidth={selected ? 2 : 1} filter={`url(#${shadowId})`} />
+      <circle cx={pos.x} cy={pos.y} r={r} fill={`url(#${gradId})`} stroke={stroke} strokeWidth={selected ? 2 / zoom : 1 / zoom} filter={`url(#${shadowId})`} />
       
       {/* Inner metallic ring */}
-      <circle cx={pos.x} cy={pos.y} r={r * 0.7} fill="none" stroke="#e0e0e0" strokeWidth={1} />
+      <circle cx={pos.x} cy={pos.y} r={r * 0.7} fill="none" stroke="#e0e0e0" strokeWidth={1 / zoom} />
       
-      {/* Spout pointing downwards (Y axis) */}
-      <rect x={pos.x - r * 0.25} y={pos.y} width={r * 0.5} height={r * 1.5} rx={r * 0.25} 
-        fill={`url(#${gradId})`} stroke={stroke} strokeWidth={1} filter={`url(#${shadowId})`} />
+      {/* Full details if not small */}
+      {diameter * zoom >= SMALL_ELEMENT_THRESHOLD && (
+        <>
+          {/* Spout pointing downwards (Y axis) */}
+          <rect x={pos.x - r * 0.25} y={pos.y} width={r * 0.5} height={r * 1.5} rx={r * 0.25} 
+            fill={`url(#${gradId})`} stroke={stroke} strokeWidth={1 / zoom} filter={`url(#${shadowId})`} />
+          
+          {/* Aerator / Tip of the spout */}
+          <ellipse cx={pos.x} cy={pos.y + r * 1.5} rx={r * 0.25} ry={r * 0.15} fill="#333" stroke="#888" strokeWidth={1 / zoom} />
+          
+          {/* Top Handle */}
+          <rect x={pos.x - r * 0.1} y={pos.y - r * 0.8} width={r * 0.2} height={r * 0.8} rx={r * 0.1} 
+            fill={`url(#${gradId})`} stroke={stroke} strokeWidth={1 / zoom} />
+        </>
+      )}
       
-      {/* Aerator / Tip of the spout */}
-      <ellipse cx={pos.x} cy={pos.y + r * 1.5} rx={r * 0.25} ry={r * 0.15} fill="#333" stroke="#888" strokeWidth={1} />
-      
-      {/* Top Handle */}
-      <rect x={pos.x - r * 0.1} y={pos.y - r * 0.8} width={r * 0.2} height={r * 0.8} rx={r * 0.1} 
-        fill={`url(#${gradId})`} stroke={stroke} strokeWidth={1} />
-
-      {/* Diameter label */}
-      <text x={pos.x} y={pos.y - 6} textAnchor="middle" dominantBaseline="middle"
-        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
-        style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
-        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
-        TORNEIRA
-        <tspan x={pos.x} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">Ø{diameter} mm</tspan>
-      </text>
+      {/* Label / Callout */}
+      <SmallElementLabel
+        elementId={element.id}
+        cx={pos.x}
+        cy={pos.y}
+        worldWidth={diameter}
+        worldHeight={diameter}
+        zoom={zoom}
+        title="TORNEIRA"
+        subtitle={`Ø${diameter} mm`}
+        color={stroke}
+      />
     </g>
   )
 }
