@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { useEditorStore, selectProject, selectSettings } from '../store/editorStore.ts'
+import { useEditorStore, selectProject, selectSettings, selectActiveTool } from '../store/editorStore.ts'
 import { useDialogUnit } from '../utils/useDialogUnit.ts'
 import type { GridSpacing } from '../models/types.ts'
 
 export const ElementPalette: React.FC = () => {
   const settings = useEditorStore(selectSettings)
   const project  = useEditorStore(selectProject)
+  const activeTool = useEditorStore(selectActiveTool)
   const store    = useEditorStore()
   const { unit, fromMm, toMm } = useDialogUnit()
 
@@ -62,6 +63,18 @@ export const ElementPalette: React.FC = () => {
         <div className="palette-items">
           <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M6 12h12"/></svg>} label="Área Molhada" onClick={() => store.setOpenDialog('new-wet-area')} />
           <PaletteItem icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18v3H3z"/><path d="M3 15h18v3H3z"/></svg>} label="Rodabanca"    onClick={() => store.setOpenDialog('new-backsplash')} />
+        </div>
+      </section>
+
+      <section className="palette-section">
+        <h2 className="palette-section__title">Anotações</h2>
+        <div className="palette-items">
+          <PaletteItem 
+            icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>} 
+            label="Texto" 
+            onClick={() => store.setActiveTool('annotation')} 
+            active={activeTool === 'annotation'}
+          />
         </div>
       </section>
 
@@ -240,11 +253,12 @@ type PaletteItemProps = {
   onClick?: () => void
   disabled?: boolean
   tooltip?: string
+  active?: boolean
 }
 
-const PaletteItem: React.FC<PaletteItemProps> = ({ icon, label, onClick, disabled, tooltip }) => (
+const PaletteItem: React.FC<PaletteItemProps> = ({ icon, label, onClick, disabled, tooltip, active }) => (
   <button
-    className={`palette-item${disabled ? ' palette-item--disabled' : ''}`}
+    className={`palette-item${disabled ? ' palette-item--disabled' : ''}${active ? ' palette-item--active' : ''}`}
     onClick={onClick}
     disabled={disabled}
     title={tooltip ?? label}

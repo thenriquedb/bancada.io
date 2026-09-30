@@ -17,6 +17,7 @@ import type {
   WetAreaElement,
   BacksplashElement,
   CutoutElement,
+  AnnotationElement,
 } from '../models/types.ts'
 import { getElementBounds, isInsideBounds } from './geometry/bounds.ts'
 import { getValidParents } from '../utils/elementHelpers.ts'
@@ -228,6 +229,7 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
         {element.type === 'wet-area'   && <WetAreaProps el={element} unit={unit} store={store} />}
         {element.type === 'backsplash' && <BacksplashProps el={element} unit={unit} store={store} />}
         {element.type === 'cutout'     && <CutoutProps el={element} unit={unit} store={store} />}
+        {element.type === 'annotation' && <AnnotationProps el={element as AnnotationElement} store={store} />}
 
         <PropGroup title="Cotas Visíveis">
           <PropField label="Dimensões">
@@ -752,6 +754,20 @@ const CutoutProps: React.FC<{ el: CutoutElement } & PropsHelper> = ({ el, store 
 )
 
 // ─── Shared UI helpers ────────────────────────────────────────────────────────
+const AnnotationProps: React.FC<{ el: AnnotationElement } & Omit<PropsHelper, 'unit'>> = ({ el, store }) => (
+  <PropGroup title="Texto">
+    <PropField label="Conteúdo">
+      <input type="text" value={el.text}
+        onChange={(e) => store.updateElement(el.id, { text: e.target.value })} />
+    </PropField>
+    <PropField label="Tamanho da Fonte">
+      <input type="number" step={10} value={el.fontSize}
+        onChange={(e) => store.updateElement(el.id, { fontSize: Number(e.target.value) })} />
+      <span className="prop-unit">px</span>
+    </PropField>
+  </PropGroup>
+)
+
 
 const PropGroup: React.FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="prop-group">

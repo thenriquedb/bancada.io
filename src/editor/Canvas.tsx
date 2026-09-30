@@ -23,8 +23,10 @@ import { TrashRenderer } from './rendering/TrashRenderer.tsx'
 import { WetAreaRenderer } from './rendering/WetAreaRenderer.tsx'
 import { BacksplashRenderer } from './rendering/BacksplashRenderer.tsx'
 import { CutoutRenderer } from './rendering/CutoutRenderer.tsx'
+import { AnnotationRenderer } from './rendering/AnnotationRenderer.tsx'
 import { DimensionRenderer } from './rendering/DimensionRenderer.tsx'
 import { generateAutoDimensions } from './geometry/dimensions.ts'
+import { generateId } from '../utils/helpers.ts'
 import type { Point, ProjectElement, CountertopElement, WetAreaElement, ValidationWarning } from '../models/types.ts'
 
 const MIN_ZOOM = 0.04
@@ -330,6 +332,24 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         return
       }
 
+      if (activeTool === 'annotation') {
+        const snapped = snapPoint(world, { gridSize: settings.gridSpacing, snapToGrid: settings.snapToGrid })
+        const newId = generateId('annotation')
+        store.pushHistory()
+        store.addElement({
+          type: 'annotation',
+          id: newId,
+          text: 'Texto',
+          fontSize: 150,
+          position: snapped,
+          locked: false,
+          visible: true,
+        })
+        store.setActiveTool('select')
+        store.setSelectedIds([newId])
+        return
+      }
+
       if (activeTool === 'select') {
         // ── Check resize handles on selected elements first ───────────────
         for (const id of selectedIds) {
@@ -526,7 +546,9 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
 
   // ── Cursor ───────────────────────────────────────────────────────────────
   let cursor = 'default'
-  if (activeTool === 'pan' || isSpacePressed) {
+  if (activeTool === 'annotation') {
+    cursor = 'text'
+  } else if (activeTool === 'pan' || isSpacePressed) {
     cursor = drag.type === 'panning' ? 'grabbing' : 'grab'
   } else if (drag.type === 'panning') {
     cursor = 'grabbing'
@@ -790,16 +812,7 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, ho
     case 'dimension':
       return null // handled via auto-dims
     case 'annotation':
-      return (
-        <text
-          x={element.position.x} y={element.position.y}
-          fontSize={element.fontSize} fontFamily="Inter, sans-serif"
-          fill={selected ? '#1971c2' : '#333'}
-          style={{ userSelect: 'none' }}
-        >
-          {element.text}
-        </text>
-      )
+      return <AnnotationRenderer element={element} selected={selected} hovered={hovered} zoom={zoom} />
     default:
       return null
   }

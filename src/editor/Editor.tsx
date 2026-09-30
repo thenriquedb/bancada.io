@@ -148,6 +148,7 @@ export const Editor: React.FC = () => {
       {openDialog === 'new-wet-area'   && <NewWetAreaDialog />}
       {openDialog === 'new-cutout'     && <NewCutoutDialog />}
       {openDialog === 'new-backsplash' && <NewBacksplashDialog />}
+      {openDialog === 'new-annotation' && <NewAnnotationDialog />}
       
       <ConfirmDeleteDialog />
     </div>

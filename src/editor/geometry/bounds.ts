@@ -45,8 +45,11 @@ function getUnrotatedBounds(el: ProjectElement): Rect | null {
       return { x: el.position.x, y: el.position.y, width: el.width, height: el.depth }
     case 'backsplash':
       return { x: el.position.x, y: el.position.y, width: el.length, height: el.height }
-    case 'annotation':
-      return { x: el.position.x, y: el.position.y, width: 200, height: 20 }
+    case 'annotation': {
+      const estWidth = el.text.length * (el.fontSize * 0.55)
+      const estHeight = el.fontSize
+      return { x: el.position.x, y: el.position.y - el.fontSize * 0.8, width: estWidth, height: estHeight }
+    }
     case 'dimension':
       return null
     default:

@@ -13,6 +13,7 @@ export function useKeyboard() {
       // Tools
       if (!meta && e.key === 'v') { store.setActiveTool('select'); return }
       if (!meta && e.key === 'h') { store.setActiveTool('pan'); return }
+      if (!meta && (e.key === 't' || e.key === 'T')) { store.setActiveTool('annotation'); return }
 
       if (e.key === 'Escape') {
         store.clearSelection()
