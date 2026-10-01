@@ -78,6 +78,9 @@ export type CooktopElement = BaseElement & {
   type: 'cooktop'
   width: number     // mm
   depth: number     // mm
+  cutWidth?: number
+  cutDepth?: number
+  displayMode?: 'cooktop' | 'cutout'
   parentId: string
 }
 

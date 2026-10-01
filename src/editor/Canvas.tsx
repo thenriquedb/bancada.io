@@ -219,9 +219,19 @@ function applyResize(
     case 'sink':
       store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
       break
-    case 'cooktop':
-      store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
+    case 'cooktop': {
+      const cooktop = el as CooktopElement
+      if (cooktop.displayMode === 'cutout') {
+        const cw = nw
+        const cd = nh
+        const newPosX = nx + cw / 2 - cooktop.width / 2
+        const newPosY = ny + cd / 2 - cooktop.depth / 2
+        store.updateElement(cooktop.id, { position: { x: newPosX, y: newPosY }, cutWidth: cw, cutDepth: cd })
+      } else {
+        store.updateElement(cooktop.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
+      }
       break
+    }
     case 'wet-area':
       store.updateElement(el.id, { position: { x: nx, y: ny }, width: nw, depth: nh })
       break

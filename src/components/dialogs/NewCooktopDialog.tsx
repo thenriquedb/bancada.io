@@ -15,6 +15,9 @@ export const NewCooktopDialog: React.FC = () => {
 
   const [width, setWidth]       = useState(fromMm(560))
   const [depth, setDepth]       = useState(fromMm(490))
+  const [cutWidth, setCutWidth] = useState(fromMm(540))
+  const [cutDepth, setCutDepth] = useState(fromMm(470))
+  const [displayMode, setDisplayMode] = useState<'cooktop' | 'cutout'>('cooktop')
   const [parentId, setParentId] = useState(defaultCt?.id ?? '')
   const [posX, setPosX]         = useState(fromMm(500))
   const [posY, setPosY]         = useState(fromMm(80))
@@ -40,6 +43,9 @@ export const NewCooktopDialog: React.FC = () => {
       visible: true,
       width:    Math.round(toMm(width)),
       depth:    Math.round(toMm(depth)),
+      cutWidth: Math.round(toMm(cutWidth)),
+      cutDepth: Math.round(toMm(cutDepth)),
+      displayMode,
       parentId,
     }
     store.addElement(el)
@@ -60,9 +66,23 @@ export const NewCooktopDialog: React.FC = () => {
           <input id="cooktop-width" type="number" min={0} step={step} value={width}
             onChange={(e) => setWidth(Number(e.target.value))} />
         </FormField>
-        <FormField label="Profundidade" unit={unit} tooltip="A profundidade total externa do cooktop.">
+        <FormField label="Profundidade total" unit={unit} tooltip="A profundidade total externa do cooktop.">
           <input id="cooktop-depth" type="number" min={0} step={step} value={depth}
             onChange={(e) => setDepth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Recorte Nicho (L)" unit={unit} tooltip="A largura do buraco do nicho para embutir.">
+          <input id="cooktop-cut-width" type="number" min={0} step={step} value={cutWidth}
+            onChange={(e) => setCutWidth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Recorte Nicho (P)" unit={unit} tooltip="A profundidade do buraco do nicho para embutir.">
+          <input id="cooktop-cut-depth" type="number" min={0} step={step} value={cutDepth}
+            onChange={(e) => setCutDepth(Number(e.target.value))} />
+        </FormField>
+        <FormField label="Modo de Exibição" tooltip="Selecione o que deseja exibir no desenho.">
+          <select value={displayMode} onChange={(e) => setDisplayMode(e.target.value as 'cooktop' | 'cutout')}>
+            <option value="cooktop">Fogão completo (gabarito)</option>
+            <option value="cutout">Apenas Nicho (Recorte)</option>
+          </select>
         </FormField>
       </FormSection>
       <FormSection title="Local">

@@ -20,8 +20,21 @@ function getUnrotatedBounds(el: ProjectElement): Rect | null {
     }
     case 'sink':
       return { x: el.position.x, y: el.position.y, width: el.width, height: el.depth }
-    case 'cooktop':
+    case 'cooktop': {
+      if (el.displayMode === 'cutout') {
+        const cw = el.cutWidth ?? el.width
+        const cd = el.cutDepth ?? el.depth
+        // In cutout mode, we shift the origin to keep the cutout centered inside the original full width, 
+        // OR we just assume pos.x/y is the top-left of whatever is being displayed.
+        // Let's assume pos.x and y are the top left of the *active* bounding box, so we don't jump if we don't have to.
+        // Wait, if pos.x, pos.y is the top-left of the outer cooktop, then the cutout is offset.
+        // Let's use the offset if pos.x/y is meant to be the top-left of the full cooktop.
+        const cxRect = el.position.x + el.width / 2 - cw / 2
+        const cyRect = el.position.y + el.depth / 2 - cd / 2
+        return { x: cxRect, y: cyRect, width: cw, height: cd }
+      }
       return { x: el.position.x, y: el.position.y, width: el.width, height: el.depth }
+    }
     case 'faucet':
       return {
         x: el.position.x - el.diameter / 2,

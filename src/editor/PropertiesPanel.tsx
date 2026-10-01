@@ -609,6 +609,15 @@ const CooktopProps: React.FC<{ el: CooktopElement } & PropsHelper> = ({ el, stor
         onChange={(e) => store.updateElement(el.id, { cutDepth: Number(e.target.value) })} />
       <span className="prop-unit">mm</span>
     </PropField>
+    <PropField label="Exibição">
+      <select
+        value={el.displayMode || 'cooktop'}
+        onChange={(e) => store.updateElement(el.id, { displayMode: e.target.value as 'cooktop' | 'cutout' })}
+      >
+        <option value="cooktop">Fogão completo</option>
+        <option value="cutout">Apenas Nicho (Recorte)</option>
+      </select>
+    </PropField>
   </PropGroup>
 )
 
