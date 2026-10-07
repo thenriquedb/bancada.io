@@ -45,6 +45,14 @@ export type CountertopGeometry =
 
 // ─── Element union ──────────────────────────────────────────────────────────
 
+export type CalloutPosition =
+  | 'auto'
+  | 'top-right' | 'top-left'
+  | 'bottom-right' | 'bottom-left'
+  | 'right' | 'left'
+
+export type DimSide = 'auto' | 'top' | 'bottom' | 'left' | 'right' | 'center'
+
 type BaseElement = {
   id: string
   position: Point
@@ -58,6 +66,18 @@ type BaseElement = {
   dimRoot?: boolean
   label?: string
   rotation?: number // in degrees
+  /** Manual callout placement for small elements. Undefined / 'auto' = automatic layout. */
+  calloutPosition?: CalloutPosition
+  /**
+   * Individual placement for each visible dimension. Undefined / 'auto' = automatic placement.
+   */
+  dimSelfPos?: DimSide
+  dimSelfPosV?: DimSide // countertops only: vertical overall dimensions
+  dimTopPos?: DimSide
+  dimBottomPos?: DimSide
+  dimLeftPos?: DimSide
+  dimRightPos?: DimSide
+  dimRootPos?: DimSide
 }
 
 export type CountertopElement = BaseElement & {

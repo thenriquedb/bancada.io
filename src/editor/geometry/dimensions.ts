@@ -61,21 +61,39 @@ export function generateAutoDimensions(
   // Only draw overall dimensions if it's a countertop
   if (parent.type === 'countertop' && parent.dimSelf !== false) {
     // ── Overall width (Segment A comprimento) ────────────────────────────────
+    let startY = pos.y
+    let widthOffset = DIM_OFFSET_PRIMARY
+    if (parent.dimSelfPos === 'bottom') {
+      startY = pos.y + pH
+      widthOffset = Math.abs(DIM_OFFSET_PRIMARY)
+    } else if (parent.dimSelfPos === 'top') {
+      startY = pos.y
+      widthOffset = -Math.abs(DIM_OFFSET_PRIMARY)
+    }
+
     dims.push({
       id: `dim-${parent.id}-width`,
       countertopId,
       orientation: 'horizontal',
       kind: 'countertop',
-      startPoint: { x: pos.x, y: pos.y },
-      endPoint: { x: pos.x + pW, y: pos.y },
-      offset: DIM_OFFSET_PRIMARY,
+      startPoint: { x: pos.x, y: startY },
+      endPoint: { x: pos.x + pW, y: startY },
+      offset: widthOffset,
       value: pW,
       label: fmt(pW, unit),
     })
 
     // ── Overall height ───────────────────────────────────────────────────────
-    const xDepth = isLShape ? pos.x : pos.x + pW
-    const offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 50
+    let xDepth = isLShape ? pos.x : pos.x + pW
+    let offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 50
+    if (parent.dimSelfPosV === 'left') {
+      xDepth = pos.x
+      offsetDepth = -Math.abs(DIM_OFFSET_PRIMARY)
+    } else if (parent.dimSelfPosV === 'right') {
+      xDepth = pos.x + pW
+      offsetDepth = Math.abs(DIM_OFFSET_PRIMARY)
+    }
+
     dims.push({
       id: `dim-${parent.id}-depth`,
       countertopId,
@@ -190,14 +208,27 @@ export function generateAutoDimensions(
     }
     const dLeft = bounds.x - leftBound
     if (dLeft > 10 && child.dimLeft !== false) {
+      let leftY = bounds.y + bounds.height / 2
+      let leftOffset = gapOffset
+      if (child.dimLeftPos === 'top') {
+        leftY = bounds.y
+        leftOffset = -Math.abs(gapOffset)
+      } else if (child.dimLeftPos === 'bottom') {
+        leftY = bounds.y + bounds.height
+        leftOffset = Math.abs(gapOffset)
+      } else if (child.dimLeftPos === 'center') {
+        leftY = bounds.y + bounds.height / 2
+        leftOffset = 0
+      }
+
       dims.push({
         id: `dim-${child.id}-left-${parent.id}`,
         countertopId,
         orientation: 'horizontal',
         kind: 'gap',
-        startPoint: { x: leftBound, y: bounds.y + bounds.height / 2 },
-        endPoint: { x: bounds.x, y: bounds.y + bounds.height / 2 },
-        offset: gapOffset,
+        startPoint: { x: leftBound, y: leftY },
+        endPoint: { x: bounds.x, y: leftY },
+        offset: leftOffset,
         value: dLeft,
         label: fmt(dLeft, unit),
       })
@@ -211,14 +242,27 @@ export function generateAutoDimensions(
     else if (child.type === 'cutout' && child.shape === 'circular') isCircular = true
 
     if (bounds.width > 20 && child.dimSelf !== false && isDirect && !isCircular) {
+      let selfY = bounds.y
+      let selfOffset = childDimOffset
+      if (child.dimSelfPos === 'bottom') {
+        selfY = bounds.y + bounds.height
+        selfOffset = Math.abs(childDimOffset)
+      } else if (child.dimSelfPos === 'top') {
+        selfY = bounds.y
+        selfOffset = -Math.abs(childDimOffset)
+      } else if (child.dimSelfPos === 'center') {
+        selfY = bounds.y + bounds.height / 2
+        selfOffset = 0
+      }
+
       dims.push({
         id: `dim-${child.id}-width`,
         countertopId,
         orientation: 'horizontal',
         kind: 'element',
-        startPoint: { x: bounds.x, y: bounds.y },
-        endPoint: { x: bounds.x + bounds.width, y: bounds.y },
-        offset: childDimOffset,
+        startPoint: { x: bounds.x, y: selfY },
+        endPoint: { x: bounds.x + bounds.width, y: selfY },
+        offset: selfOffset,
         value: bounds.width,
         label: fmt(bounds.width, unit),
       })
@@ -245,14 +289,27 @@ export function generateAutoDimensions(
     }
     const dTop = bounds.y - topBound
     if (dTop > 10 && child.dimTop !== false) {
+      let topX = bounds.x + bounds.width
+      let topOffset = -gapOffset
+      if (child.dimTopPos === 'left') {
+        topX = bounds.x
+        topOffset = -Math.abs(gapOffset)
+      } else if (child.dimTopPos === 'right') {
+        topX = bounds.x + bounds.width
+        topOffset = Math.abs(gapOffset)
+      } else if (child.dimTopPos === 'center') {
+        topX = bounds.x + bounds.width / 2
+        topOffset = 0
+      }
+
       dims.push({
         id: `dim-${child.id}-top-${parent.id}`,
         countertopId,
         orientation: 'vertical',
         kind: 'gap',
-        startPoint: { x: bounds.x + bounds.width, y: topBound },
-        endPoint: { x: bounds.x + bounds.width, y: bounds.y },
-        offset: -gapOffset,
+        startPoint: { x: topX, y: topBound },
+        endPoint: { x: topX, y: bounds.y },
+        offset: topOffset,
         value: dTop,
         label: fmt(dTop, unit),
       })
@@ -279,14 +336,27 @@ export function generateAutoDimensions(
     }
     const dRight = rightBound - (bounds.x + bounds.width)
     if (dRight > 10 && child.dimRight !== false) {
+      let rightY = bounds.y + bounds.height / 2
+      let rightOffset = gapOffset
+      if (child.dimRightPos === 'top') {
+        rightY = bounds.y
+        rightOffset = -Math.abs(gapOffset)
+      } else if (child.dimRightPos === 'bottom') {
+        rightY = bounds.y + bounds.height
+        rightOffset = Math.abs(gapOffset)
+      } else if (child.dimRightPos === 'center') {
+        rightY = bounds.y + bounds.height / 2
+        rightOffset = 0
+      }
+
       dims.push({
         id: `dim-${child.id}-right-${parent.id}`,
         countertopId,
         orientation: 'horizontal',
         kind: 'gap',
-        startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 },
-        endPoint: { x: rightBound, y: bounds.y + bounds.height / 2 },
-        offset: gapOffset,
+        startPoint: { x: bounds.x + bounds.width, y: rightY },
+        endPoint: { x: rightBound, y: rightY },
+        offset: rightOffset,
         value: dRight,
         label: fmt(dRight, unit),
       })
@@ -313,14 +383,27 @@ export function generateAutoDimensions(
     }
     const dBottom = bottomBound - (bounds.y + bounds.height)
     if (dBottom > 10 && child.dimBottom !== false) {
+      let bottomX = bounds.x + bounds.width
+      let bottomOffset = -gapOffset
+      if (child.dimBottomPos === 'left') {
+        bottomX = bounds.x
+        bottomOffset = -Math.abs(gapOffset)
+      } else if (child.dimBottomPos === 'right') {
+        bottomX = bounds.x + bounds.width
+        bottomOffset = Math.abs(gapOffset)
+      } else if (child.dimBottomPos === 'center') {
+        bottomX = bounds.x + bounds.width / 2
+        bottomOffset = 0
+      }
+
       dims.push({
         id: `dim-${child.id}-bottom-${parent.id}`,
         countertopId,
         orientation: 'vertical',
         kind: 'gap',
-        startPoint: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
-        endPoint: { x: bounds.x + bounds.width, y: bottomBound },
-        offset: -gapOffset,
+        startPoint: { x: bottomX, y: bounds.y + bounds.height },
+        endPoint: { x: bottomX, y: bottomBound },
+        offset: bottomOffset,
         value: dBottom,
         label: fmt(dBottom, unit),
       })

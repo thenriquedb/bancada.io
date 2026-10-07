@@ -94,7 +94,7 @@ export const SmallElementLabel: React.FC<SmallElementLabelProps> = ({
     <g className="callout" style={{ pointerEvents: 'none', userSelect: 'none' }}>
       {/* Minimum visual marker – real geometry is untouched */}
       {tooSmall && (
-        <circle cx={cx} cy={cy} r={(MIN_VISUAL_SIZE / 2) * px} fill="#ffffff" fillOpacity={0.7}
+        <circle cx={cx} cy={cy} r={(MIN_VISUAL_SIZE / 2) * px} fill="#ffffff" fillOpacity={0.95}
           stroke={color} strokeWidth={(active ? 1.5 : 1.2) * px} />
       )}
 
@@ -110,14 +110,14 @@ export const SmallElementLabel: React.FC<SmallElementLabelProps> = ({
             textAnchor={layout.textAnchor} dominantBaseline="alphabetic"
             fontSize={10 * px} fontFamily="Inter, sans-serif" fontWeight={active ? 700 : 600}
             fill={active ? CALLOUT_ACTIVE : CALLOUT_TITLE}
-            stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.85}>
+            stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.95}>
             {shortLabel(title)}
           </text>
           <text x={layout.end.x + (layout.textAnchor === 'start' ? 3 : -3) * px} y={layout.end.y + 9 * px}
             textAnchor={layout.textAnchor} dominantBaseline="alphabetic"
             fontSize={9 * px} fontFamily="Inter, sans-serif" fontWeight={400}
             fill={active ? CALLOUT_TITLE : CALLOUT_SUB}
-            stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.85}>
+            stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.95}>
             {subtitle}
           </text>
         </>

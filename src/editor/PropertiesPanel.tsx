@@ -18,7 +18,9 @@ import type {
   BacksplashElement,
   CutoutElement,
   AnnotationElement,
-  ArrowElement
+  ArrowElement,
+  CalloutPosition,
+  DimSide
 } from '../models/types.ts'
 import { getElementBounds, isInsideBounds } from './geometry/bounds.ts'
 import { getValidParents } from '../utils/elementHelpers.ts'
@@ -233,58 +235,183 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
         {element.type === 'annotation' && <AnnotationProps el={element as AnnotationElement} store={store} />}
         {element.type === 'arrow' && <ArrowProps el={element as ArrowElement} store={store} />}
 
+        {(element.type === 'faucet' || element.type === 'trash' || element.type === 'cutout') && (
+          <PropGroup title="Identificação (Callout)">
+            <PropField label="Posição">
+              <select
+                value={element.calloutPosition ?? 'auto'}
+                onChange={(e) => {
+                  store.pushHistory()
+                  const v = e.target.value
+                  store.updateElement(element.id, { calloutPosition: v === 'auto' ? undefined : (v as CalloutPosition) })
+                }}
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              >
+                <option value="auto">Automático</option>
+                <option value="top-right">Acima à direita</option>
+                <option value="top-left">Acima à esquerda</option>
+                <option value="right">À direita</option>
+                <option value="left">À esquerda</option>
+                <option value="bottom-right">Abaixo à direita</option>
+                <option value="bottom-left">Abaixo à esquerda</option>
+              </select>
+            </PropField>
+          </PropGroup>
+        )}
+
+
         <PropGroup title="Cotas Visíveis">
           <PropField label="Dimensões">
-            <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
               <input type="checkbox"
                 checked={element.dimSelf !== false}
                 onChange={(e) => {
                   store.pushHistory()
                   store.updateElement(element.id, { dimSelf: e.target.checked })
                 }} />
+              {element.dimSelf !== false && (
+                <select
+                  value={element.dimSelfPos ?? 'auto'}
+                  onChange={(e) => {
+                    store.pushHistory()
+                    const v = e.target.value
+                    store.updateElement(element.id, { dimSelfPos: v === 'auto' ? undefined : (v as DimSide) })
+                  }}
+                  style={{ flex: 1, padding: '2px 6px', fontSize: 11, height: 24 }}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="top">Acima</option>
+                  <option value="bottom">Abaixo</option>
+                  {element.type !== 'countertop' && <option value="center">Ao centro</option>}
+                </select>
+              )}
             </div>
           </PropField>
+
+          {element.type === 'countertop' && element.dimSelf !== false && (
+            <PropField label="Profundidade">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                <select
+                  value={element.dimSelfPosV ?? 'auto'}
+                  onChange={(e) => {
+                    store.pushHistory()
+                    const v = e.target.value
+                    store.updateElement(element.id, { dimSelfPosV: v === 'auto' ? undefined : (v as DimSide) })
+                  }}
+                  style={{ flex: 1, padding: '2px 6px', fontSize: 11, height: 24 }}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="left">À esquerda</option>
+                  <option value="right">À direita</option>
+                </select>
+              </div>
+            </PropField>
+          )}
           
           {'parentId' in element && (
             <>
               <PropField label="Ao Topo">
-                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                   <input type="checkbox"
                     checked={element.dimTop !== false}
                     onChange={(e) => {
                       store.pushHistory()
                       store.updateElement(element.id, { dimTop: e.target.checked })
                     }} />
+                  {element.dimTop !== false && (
+                    <select
+                      value={element.dimTopPos ?? 'auto'}
+                      onChange={(e) => {
+                        store.pushHistory()
+                        const v = e.target.value
+                        store.updateElement(element.id, { dimTopPos: v === 'auto' ? undefined : (v as DimSide) })
+                      }}
+                      style={{ flex: 1, padding: '2px 6px', fontSize: 11, height: 24 }}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="right">À direita</option>
+                      <option value="left">À esquerda</option>
+                      <option value="center">Ao centro</option>
+                    </select>
+                  )}
                 </div>
               </PropField>
               <PropField label="À Base">
-                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                   <input type="checkbox"
                     checked={element.dimBottom !== false}
                     onChange={(e) => {
                       store.pushHistory()
                       store.updateElement(element.id, { dimBottom: e.target.checked })
                     }} />
+                  {element.dimBottom !== false && (
+                    <select
+                      value={element.dimBottomPos ?? 'auto'}
+                      onChange={(e) => {
+                        store.pushHistory()
+                        const v = e.target.value
+                        store.updateElement(element.id, { dimBottomPos: v === 'auto' ? undefined : (v as DimSide) })
+                      }}
+                      style={{ flex: 1, padding: '2px 6px', fontSize: 11, height: 24 }}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="right">À direita</option>
+                      <option value="left">À esquerda</option>
+                      <option value="center">Ao centro</option>
+                    </select>
+                  )}
                 </div>
               </PropField>
               <PropField label="À Esquerda">
-                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                   <input type="checkbox"
                     checked={element.dimLeft !== false}
                     onChange={(e) => {
                       store.pushHistory()
                       store.updateElement(element.id, { dimLeft: e.target.checked })
                     }} />
+                  {element.dimLeft !== false && (
+                    <select
+                      value={element.dimLeftPos ?? 'auto'}
+                      onChange={(e) => {
+                        store.pushHistory()
+                        const v = e.target.value
+                        store.updateElement(element.id, { dimLeftPos: v === 'auto' ? undefined : (v as DimSide) })
+                      }}
+                      style={{ flex: 1, padding: '2px 6px', fontSize: 11, height: 24 }}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="top">Acima</option>
+                      <option value="bottom">Abaixo</option>
+                      <option value="center">Ao centro</option>
+                    </select>
+                  )}
                 </div>
               </PropField>
               <PropField label="À Direita">
-                <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                   <input type="checkbox"
                     checked={element.dimRight !== false}
                     onChange={(e) => {
                       store.pushHistory()
                       store.updateElement(element.id, { dimRight: e.target.checked })
                     }} />
+                  {element.dimRight !== false && (
+                    <select
+                      value={element.dimRightPos ?? 'auto'}
+                      onChange={(e) => {
+                        store.pushHistory()
+                        const v = e.target.value
+                        store.updateElement(element.id, { dimRightPos: v === 'auto' ? undefined : (v as DimSide) })
+                      }}
+                      style={{ flex: 1, padding: '2px 6px', fontSize: 11, height: 24 }}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="top">Acima</option>
+                      <option value="bottom">Abaixo</option>
+                      <option value="center">Ao centro</option>
+                    </select>
+                  )}
                 </div>
               </PropField>
             </>
@@ -295,7 +422,7 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
             if (parent?.type === 'wet-area') {
               return (
                 <PropField label="À Bancada">
-                  <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
                     <input type="checkbox"
                       checked={element.dimRoot === true}
                       onChange={(e) => {

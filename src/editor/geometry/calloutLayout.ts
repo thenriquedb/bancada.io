@@ -218,6 +218,18 @@ export function computeCalloutLayouts(
       )
     }
 
+    // Manual placement: a single fixed candidate (still reserved so auto callouts avoid it)
+    const manual = (el as { calloutPosition?: string }).calloutPosition
+    const MANUAL: Record<string, { sx: number; sy: number }> = {
+      'top-right': { sx: 1, sy: -1 }, 'top-left': { sx: -1, sy: -1 },
+      'bottom-right': { sx: 1, sy: 1 }, 'bottom-left': { sx: -1, sy: 1 },
+      right: { sx: 1, sy: 0 }, left: { sx: -1, sy: 0 },
+    }
+    if (manual && MANUAL[manual]) {
+      cands.length = 0
+      cands.push({ ...MANUAL[manual], k: 1 })
+    }
+
     const obstacles = elements
       .filter(o => o.id !== el.id && OBSTACLE_TYPES.has(o.type) && boundsById.has(o.id))
       .map(o => boundsById.get(o.id)!)

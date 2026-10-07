@@ -64,7 +64,7 @@ export const DimensionRenderer: React.FC<DimensionRendererProps> = ({ dimensions
           maxY: my + th / 2 + 10
         }
 
-        const conflict = boxes.some(b => 
+        const conflict = boxes.some(b =>
           box.minX < b.maxX && box.maxX > b.minX &&
           box.minY < b.maxY && box.maxY > b.minY
         )
@@ -158,12 +158,12 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
       <line x1={lx2 - tickProps.dx / 2} y1={ly2 - tickProps.dy / 2} x2={lx2 + tickProps.dx / 2} y2={ly2 + tickProps.dy / 2} stroke={dimColor} strokeWidth={strokeTick} />
 
       <rect
-        x={mx - (label.length * fontSize * 0.32) - 4}
-        y={my - fontSize * 0.6}
-        width={label.length * fontSize * 0.64 + 8}
-        height={fontSize * 1.2}
-        fill="rgba(255,255,255,0.9)"
-        rx={4}
+        x={mx - (label.length * fontSize * 0.28) - 2}
+        y={my - fontSize * 0.5}
+        width={label.length * fontSize * 0.56 + 4}
+        height={fontSize}
+        fill="#ffffff"
+        rx={2}
       />
 
       <text

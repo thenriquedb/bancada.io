@@ -67,6 +67,19 @@ export async function exportProjectPDF(project: Project): Promise<void> {
       if (cId && cId !== ct.id) node.remove()
     })
 
+    // svg2pdf does not support `paint-order` and renders the white text halo (stroke) as
+    // large opaque blobs that hide the text. Strip the halo for the PDF output only.
+    clone.querySelectorAll('text').forEach(node => {
+      node.removeAttribute('stroke')
+      node.removeAttribute('stroke-width')
+      node.removeAttribute('stroke-opacity')
+      node.removeAttribute('paint-order')
+      node.querySelectorAll('tspan').forEach(t => {
+        t.removeAttribute('stroke')
+        t.removeAttribute('stroke-width')
+      })
+    })
+
     // Append temporarily to DOM to calculate accurate BBox
     const wrapper = document.createElement('div')
     wrapper.style.position = 'absolute'
