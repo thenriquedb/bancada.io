@@ -1,6 +1,6 @@
-# Countertop Designer BR (Bancada.io)
+# bancada.io
 
-O **Countertop Designer BR** é um moderno editor 2D voltado para a criação e detalhamento técnico de projetos de bancadas (pedras, mármores, granitos, porcelanatos e superfícies sintéticas). 
+O **bancada.io** é um moderno editor 2D voltado para a criação e detalhamento técnico de projetos de bancadas (pedras, mármores, granitos, porcelanatos e superfícies sintéticas). 
 
 Com uma interface visual simples, consistente e profissional, o sistema foi desenvolvido para ser "Uma ferramenta simples e moderna para desenhar uma bancada", sem a complexidade de softwares CAD pesados, focando em usabilidade e produtividade.
 

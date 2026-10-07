@@ -66,7 +66,7 @@ function drawCountertop(doc: jsPDF, ct: CountertopElement, layout: PdfLayout) {
 
     doc.rect(x, y, aW, aH, 'FD')
     doc.rect(x, y + aH, bW, bH, 'FD')
-    
+
     // Erase the overlapping line between segments
     doc.setDrawColor(PDF_THEME.colors.countertopFill)
     doc.setLineWidth(PDF_THEME.lineWidths.countertop * 1.5)
@@ -225,7 +225,7 @@ export function drawSidePanel(doc: jsPDF, project: Project, ct: CountertopElemen
   doc.setFontSize(PDF_THEME.typography.valueSize)
   doc.setTextColor(PDF_THEME.colors.panelBg)
   doc.setFont(PDF_THEME.typography.fontFamily, 'bold')
-  doc.text('COUNTERTOP DESIGNER BR', panelX + PDF_THEME.panel.width / 2, panelY + 6.5, { align: 'center' })
+  doc.text('bancada.io', panelX + PDF_THEME.panel.width / 2, panelY + 6.5, { align: 'center' })
   doc.setFont(PDF_THEME.typography.fontFamily, 'normal')
 
   let cursorY = panelY + 16
@@ -306,7 +306,7 @@ function drawScaleAndFooter(doc: jsPDF, layout: PdfLayout, pageIdx: number, tota
 
   const footerY = PDF_THEME.page.height - PDF_THEME.page.margin + 4
   const panelX = PDF_THEME.page.width - PDF_THEME.page.margin - PDF_THEME.panel.width
-  
+
   if (layout.bestTechnicalScale) {
     const inv = Math.round(1 / layout.bestTechnicalScale)
     doc.text(`ESCALA 1:${inv}`, PDF_THEME.page.margin, footerY)
@@ -316,6 +316,6 @@ function drawScaleAndFooter(doc: jsPDF, layout: PdfLayout, pageIdx: number, tota
 
   const dateStr = new Date().toLocaleDateString('pt-BR')
   doc.text(`DATA: ${dateStr}`, panelX, footerY)
-  
+
   doc.text(`FOLHA ${pageIdx + 1}/${totalPages}`, PDF_THEME.page.width - PDF_THEME.page.margin, footerY, { align: 'right' })
 }

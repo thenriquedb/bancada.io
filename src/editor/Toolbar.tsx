@@ -15,9 +15,9 @@ type ToolbarProps = {
   onNewProject: () => void
   onExportJSON: () => void
   onImportJSON: () => void
-  onExportPDF:  () => void
-  onExportImage:() => void
-  canvasWidth:  number
+  onExportPDF: () => void
+  onExportImage: () => void
+  canvasWidth: number
   canvasHeight: number
 }
 
@@ -25,13 +25,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onNewProject, onExportJSON, onImportJSON, onExportPDF, onExportImage, canvasWidth, canvasHeight,
 }) => {
   const activeTool = useEditorStore(selectActiveTool)
-  const canUndo    = useEditorStore(selectCanUndo)
-  const canRedo    = useEditorStore(selectCanRedo)
-  const viewport   = useEditorStore(selectViewport)
-  const isDirty    = useEditorStore(selectIsDirty)
-  const project    = useEditorStore(selectProject)
-  const settings   = useEditorStore(selectSettings)
-  const store      = useEditorStore()
+  const canUndo = useEditorStore(selectCanUndo)
+  const canRedo = useEditorStore(selectCanRedo)
+  const viewport = useEditorStore(selectViewport)
+  const isDirty = useEditorStore(selectIsDirty)
+  const project = useEditorStore(selectProject)
+  const settings = useEditorStore(selectSettings)
+  const store = useEditorStore()
 
   const setTool = (tool: EditorTool) => store.setActiveTool(tool)
   const zoomPct = Math.round(viewport.zoom * 100)
@@ -41,7 +41,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       {/* Brand */}
       <div className="toolbar__brand">
         <span className="toolbar__logo">◈</span>
-        <span className="toolbar__title">Countertop Designer BR</span>
+        <span className="toolbar__title">bancada.io</span>
         {isDirty && <span className="toolbar__dirty" title="Alterações não salvas">•</span>}
       </div>
 
@@ -122,12 +122,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <div className="toolbar__tools">
         <ToolBtn id="tool-select" title="Selecionar (V)" active={activeTool === 'select'} onClick={() => setTool('select')}>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M3 1l10 7-5.5 1.5L6 14 3 1z"/>
+            <path d="M3 1l10 7-5.5 1.5L6 14 3 1z" />
           </svg>
         </ToolBtn>
         <ToolBtn id="tool-pan" title="Mover canvas (H)" active={activeTool === 'pan'} onClick={() => setTool('pan')}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20" />
           </svg>
         </ToolBtn>
       </div>
@@ -177,8 +177,8 @@ const ToolbarMenu: React.FC<{ label: string; children: React.ReactNode }> = ({ l
           {React.Children.map(children, (child) =>
             React.isValidElement(child)
               ? React.cloneElement(child as React.ReactElement<{ onClick?: () => void }>, {
-                  onClick: () => { setOpen(false); (child as React.ReactElement<{ onClick?: () => void }>).props.onClick?.() },
-                })
+                onClick: () => { setOpen(false); (child as React.ReactElement<{ onClick?: () => void }>).props.onClick?.() },
+              })
               : child
           )}
         </div>
