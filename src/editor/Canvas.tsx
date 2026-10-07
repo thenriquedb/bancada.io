@@ -25,6 +25,7 @@ import { BacksplashRenderer } from './rendering/BacksplashRenderer.tsx'
 import { CutoutRenderer } from './rendering/CutoutRenderer.tsx'
 import { AnnotationRenderer } from './rendering/AnnotationRenderer.tsx'
 import { DimensionRenderer } from './rendering/DimensionRenderer.tsx'
+import { ArrowRenderer } from './rendering/ArrowRenderer.tsx'
 import { generateAutoDimensions } from './geometry/dimensions.ts'
 import { generateId } from '../utils/helpers.ts'
 import type { Point, ProjectElement, CountertopElement, WetAreaElement, ValidationWarning } from '../models/types.ts'
@@ -41,6 +42,8 @@ type DragState =
   | { type: 'none' }
   | { type: 'panning'; startX: number; startY: number; startPanX: number; startPanY: number }
   | { type: 'selecting'; startWorld: Point; currentWorld: Point }
+  | { type: 'drawing_arrow'; startWorld: Point; currentWorld: Point }
+  | { type: 'drawing_arrow'; startWorld: Point; currentWorld: Point }
   | {
       type: 'moving'
       elementIds: string[]
@@ -360,6 +363,20 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         return
       }
 
+      if (activeTool === 'arrow') {
+        const snapped = snapPoint(world, { gridSize: settings.gridSpacing, snapToGrid: settings.snapToGrid })
+        store.clearSelection()
+        setDrag({ type: 'drawing_arrow', startWorld: snapped, currentWorld: snapped })
+        return
+      }
+
+      if (activeTool === 'arrow') {
+        const snapped = snapPoint(world, { gridSize: settings.gridSpacing, snapToGrid: settings.snapToGrid })
+        store.clearSelection()
+        setDrag({ type: 'drawing_arrow', startWorld: snapped, currentWorld: snapped })
+        return
+      }
+
       if (activeTool === 'select') {
         // ── Check resize handles on selected elements first ───────────────
         for (const id of selectedIds) {
@@ -482,6 +499,11 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         return
       }
 
+      if (drag.type === 'drawing_arrow') {
+        setDrag({ ...drag, currentWorld: snapped })
+        return
+      }
+
       if (drag.type === 'moving') {
         const dx = snapped.x - drag.startWorld.x
         const dy = snapped.y - drag.startWorld.y
@@ -541,6 +563,24 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
           })
           store.setSelectedIds(hits.map((el: ProjectElement) => el.id))
         }
+      } else if (drag.type === 'drawing_arrow') {
+        const { startWorld, currentWorld } = drag
+        if (Math.hypot(currentWorld.x - startWorld.x, currentWorld.y - startWorld.y) > 10) {
+          const newId = generateId('arrow')
+          store.pushHistory()
+          store.addElement({
+            type: 'arrow',
+            id: newId,
+            position: { x: startWorld.x, y: startWorld.y },
+            start: { x: 0, y: 0 },
+            end: { x: currentWorld.x - startWorld.x, y: currentWorld.y - startWorld.y },
+            locked: false,
+            visible: true,
+            color: '#333333'
+          })
+          store.setSelectedIds([newId])
+        }
+        store.setActiveTool('select')
       } else if (drag.type === 'moving' || drag.type === 'resizing') {
         store.pushHistory()
       }
@@ -595,6 +635,22 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         stroke="var(--selection-color)"
         strokeWidth={1}
         strokeDasharray="4 3"
+        pointerEvents="none"
+      />
+    )
+  }
+
+  let tempArrow = null
+  if (drag.type === 'drawing_arrow') {
+    tempArrow = (
+      <line
+        x1={drag.startWorld.x * viewport.zoom + viewport.panX}
+        y1={drag.startWorld.y * viewport.zoom + viewport.panY}
+        x2={drag.currentWorld.x * viewport.zoom + viewport.panX}
+        y2={drag.currentWorld.y * viewport.zoom + viewport.panY}
+        stroke="#333"
+        strokeWidth={2}
+        strokeDasharray="4 4"
         pointerEvents="none"
       />
     )
@@ -753,8 +809,9 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         onHandleLeave={() => setHoveredHandle(null)}
       />
 
-      {/* Rubber-band selection */}
+      {/* Rubber-band selection / Drawing arrow */}
       {selectionRect}
+      {tempArrow}
     </svg>
   )
 }

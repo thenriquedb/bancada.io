@@ -10,7 +10,7 @@ type AnnotationRendererProps = {
 }
 
 export const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({ element, selected, hovered, zoom }) => {
-  const { position, text, fontSize, rotation = 0 } = element
+  const { position, text, fontSize, rotation = 0, color = '#333', weight = 'normal', highlight = false } = element
   const store = useEditorStore()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -85,8 +85,9 @@ export const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({ element,
               height: '100%',
               fontSize: `${fontSize}px`,
               fontFamily: 'Inter, sans-serif',
-              background: 'rgba(255, 255, 255, 0.9)',
-              color: '#333',
+              fontWeight: weight,
+              background: highlight ? '#ffe066' : 'rgba(255, 255, 255, 0.9)',
+              color: color,
               border: `1px dashed #1971c2`,
               outline: 'none',
               padding: 0,
@@ -96,16 +97,28 @@ export const AnnotationRenderer: React.FC<AnnotationRendererProps> = ({ element,
           />
         </foreignObject>
       ) : (
-        <text
-          x={0}
-          y={0}
-          fontSize={fontSize}
-          fontFamily="Inter, sans-serif"
-          fill="#333"
-          style={{ userSelect: 'none' }}
-        >
-          {text}
-        </text>
+        <>
+          {highlight && (
+            <rect
+              x={-5}
+              y={-fontSize * 0.8}
+              width={estWidth - 10}
+              height={fontSize * 1.1}
+              fill="#ffe066"
+            />
+          )}
+          <text
+            x={0}
+            y={0}
+            fontSize={fontSize}
+            fontWeight={weight}
+            fontFamily="Inter, sans-serif"
+            fill={color}
+            style={{ userSelect: 'none' }}
+          >
+            {text}
+          </text>
+        </>
       )}
     </g>
   )

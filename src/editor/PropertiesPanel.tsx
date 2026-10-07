@@ -18,6 +18,7 @@ import type {
   BacksplashElement,
   CutoutElement,
   AnnotationElement,
+  ArrowElement
 } from '../models/types.ts'
 import { getElementBounds, isInsideBounds } from './geometry/bounds.ts'
 import { getValidParents } from '../utils/elementHelpers.ts'
@@ -230,6 +231,7 @@ const ElementProperties: React.FC<{ element: ProjectElement }> = ({ element }) =
         {element.type === 'backsplash' && <BacksplashProps el={element} unit={unit} store={store} />}
         {element.type === 'cutout'     && <CutoutProps el={element} unit={unit} store={store} />}
         {element.type === 'annotation' && <AnnotationProps el={element as AnnotationElement} store={store} />}
+        {element.type === 'arrow' && <ArrowProps el={element as ArrowElement} store={store} />}
 
         <PropGroup title="Cotas Visíveis">
           <PropField label="Dimensões">
@@ -773,6 +775,32 @@ const AnnotationProps: React.FC<{ el: AnnotationElement } & Omit<PropsHelper, 'u
       <input type="number" step={10} value={el.fontSize}
         onChange={(e) => store.updateElement(el.id, { fontSize: Number(e.target.value) })} />
       <span className="prop-unit">px</span>
+    </PropField>
+    <PropField label="Cor do Texto">
+      <input type="color" value={el.color || '#333333'}
+        onChange={(e) => store.updateElement(el.id, { color: e.target.value })} />
+    </PropField>
+    <PropField label="Estilo">
+      <select value={el.weight || 'normal'} onChange={(e) => store.updateElement(el.id, { weight: e.target.value })}>
+        <option value="normal">Normal</option>
+        <option value="bold">Negrito</option>
+      </select>
+    </PropField>
+    <PropField label="Realce">
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+        <input type="checkbox" checked={el.highlight || false}
+          onChange={(e) => store.updateElement(el.id, { highlight: e.target.checked })} />
+        <span style={{ fontSize: 13, color: 'var(--gray-7)' }}>Marca texto amarelo</span>
+      </label>
+    </PropField>
+  </PropGroup>
+)
+
+const ArrowProps: React.FC<{ el: ArrowElement } & Omit<PropsHelper, 'unit'>> = ({ el, store }) => (
+  <PropGroup title="Seta">
+    <PropField label="Cor">
+      <input type="color" value={el.color || '#ff0000'}
+        onChange={(e) => store.updateElement(el.id, { color: e.target.value })} />
     </PropField>
   </PropGroup>
 )

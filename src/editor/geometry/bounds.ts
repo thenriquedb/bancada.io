@@ -63,6 +63,13 @@ function getUnrotatedBounds(el: ProjectElement): Rect | null {
       const estHeight = el.fontSize
       return { x: el.position.x, y: el.position.y - el.fontSize * 0.8, width: estWidth, height: estHeight }
     }
+    case 'arrow': {
+      const minX = Math.min(el.start.x, el.end.x) + el.position.x
+      const maxX = Math.max(el.start.x, el.end.x) + el.position.x
+      const minY = Math.min(el.start.y, el.end.y) + el.position.y
+      const maxY = Math.max(el.start.y, el.end.y) + el.position.y
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+    }
     case 'dimension':
       return null
     default:

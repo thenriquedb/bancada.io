@@ -135,10 +135,20 @@ type DimensionElement = BaseElement & {
   auto: boolean
 }
 
-type AnnotationElement = BaseElement & {
+export type AnnotationElement = BaseElement & {
   type: 'annotation'
   text: string
   fontSize: number
+  color?: string
+  weight?: 'normal' | 'bold'
+  highlight?: boolean
+}
+
+export type ArrowElement = BaseElement & {
+  type: 'arrow'
+  start: Point
+  end: Point
+  color?: string
 }
 
 export type ProjectElement =
@@ -152,6 +162,7 @@ export type ProjectElement =
   | CutoutElement
   | DimensionElement
   | AnnotationElement
+  | ArrowElement
 
 // ─── Layer ──────────────────────────────────────────────────────────────────
 

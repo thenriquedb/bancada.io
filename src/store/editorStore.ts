@@ -20,7 +20,7 @@ type Viewport = {
 
 // ─── Editor tool ─────────────────────────────────────────────────────────────
 
-export type EditorTool = 'select' | 'pan' | 'annotation'
+export type EditorTool = 'select' | 'pan' | 'annotation' | 'arrow'
 
 // ─── Dialogs ─────────────────────────────────────────────────────────────────
 

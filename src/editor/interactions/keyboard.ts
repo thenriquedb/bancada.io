@@ -14,6 +14,7 @@ export function useKeyboard() {
       if (!meta && e.key === 'v') { store.setActiveTool('select'); return }
       if (!meta && e.key === 'h') { store.setActiveTool('pan'); return }
       if (!meta && (e.key === 't' || e.key === 'T')) { store.setActiveTool('annotation'); return }
+      if (!meta && (e.key === 'a' || e.key === 'A')) { store.setActiveTool('arrow'); return }
 
       if (e.key === 'Escape') {
         store.clearSelection()
