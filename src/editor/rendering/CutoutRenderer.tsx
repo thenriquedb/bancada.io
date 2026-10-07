@@ -46,6 +46,8 @@ export const CutoutRenderer: React.FC<CutoutRendererProps> = ({ element, selecte
           title={label}
           subtitle={`Ø${element.diameter} mm`}
           color={strokeColor}
+          selected={selected}
+          hovered={hovered}
         />
       </g>
     )
@@ -89,6 +91,8 @@ export const CutoutRenderer: React.FC<CutoutRendererProps> = ({ element, selecte
         title={label}
         subtitle={`${w} × ${d} mm`}
         color={strokeColor}
+        selected={selected}
+        hovered={hovered}
       />
     </g>
   )

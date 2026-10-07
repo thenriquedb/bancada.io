@@ -157,6 +157,18 @@ export function generateAutoDimensions(
       })
     }
 
+    // Cutouts: measure to the nearest neighbouring item in that direction (same segment,
+    // overlapping span) instead of the countertop edge. Falls back to the existing bound.
+    const neighbours = child.type === 'cutout'
+      ? children.filter(o => {
+          if (o.id === child.id || o.type === 'wet-area' || o.type === 'backsplash') return false
+          if (!getElementBounds(o)) return false
+          return getElementReferenceBounds(o, parent as any).segmentId === refBounds.segmentId
+        }).map(o => getElementBounds(o)!)
+      : []
+    const overlapY = (o: { y: number; height: number }) => o.y < bounds.y + bounds.height && o.y + o.height > bounds.y
+    const overlapX = (o: { x: number; width: number }) => o.x < bounds.x + bounds.width && o.x + o.width > bounds.x
+
     // Distance from left edge
     let leftBound = refBounds.left
     if (parent.type === 'countertop' && child.type !== 'wet-area') {
@@ -171,6 +183,10 @@ export function generateAutoDimensions(
           }
         }
       }
+    }
+    for (const o of neighbours) {
+      const edge = o.x + o.width
+      if (overlapY(o) && edge <= bounds.x && edge > leftBound) leftBound = edge
     }
     const dLeft = bounds.x - leftBound
     if (dLeft > 10 && child.dimLeft !== false) {
@@ -223,6 +239,10 @@ export function generateAutoDimensions(
         }
       }
     }
+    for (const o of neighbours) {
+      const edge = o.y + o.height
+      if (overlapX(o) && edge <= bounds.y && edge > topBound) topBound = edge
+    }
     const dTop = bounds.y - topBound
     if (dTop > 10 && child.dimTop !== false) {
       dims.push({
@@ -254,6 +274,9 @@ export function generateAutoDimensions(
         }
       }
     }
+    for (const o of neighbours) {
+      if (overlapY(o) && o.x >= bounds.x + bounds.width && o.x < rightBound) rightBound = o.x
+    }
     const dRight = rightBound - (bounds.x + bounds.width)
     if (dRight > 10 && child.dimRight !== false) {
       dims.push({
@@ -284,6 +307,9 @@ export function generateAutoDimensions(
           }
         }
       }
+    }
+    for (const o of neighbours) {
+      if (overlapX(o) && o.y >= bounds.y + bounds.height && o.y < bottomBound) bottomBound = o.y
     }
     const dBottom = bottomBound - (bounds.y + bounds.height)
     if (dBottom > 10 && child.dimBottom !== false) {

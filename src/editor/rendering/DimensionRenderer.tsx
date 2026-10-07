@@ -2,9 +2,9 @@ import React, { useMemo } from 'react'
 import type { AutoDimension } from '../geometry/dimensions.ts'
 import {
   PRIMARY_DIMENSION_STROKE_WIDTH,
-  SECONDARY_DIMENSION_STROKE_WIDTH,
   DIMENSION_COLOR_PRIMARY,
-  DIMENSION_COLOR_SECONDARY
+  DIMENSION_COLOR_ELEMENT,
+  DIMENSION_COLOR_POSITION
 } from './constants.ts'
 
 type DimensionRendererProps = {
@@ -133,19 +133,22 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
     ext2x1 = ep.x; ext2y1 = ep.y; ext2x2 = lx2; ext2y2 = ep.y
   }
 
-  const dimColor = isPrimary ? DIMENSION_COLOR_PRIMARY : DIMENSION_COLOR_SECONDARY
-  const fontSize = Math.max(isPrimary ? 24 : 16, 12 / zoom)
-  const tickLen = Math.max(12, 6 / zoom)
-  const strokeDim = Math.max(isPrimary ? PRIMARY_DIMENSION_STROKE_WIDTH : SECONDARY_DIMENSION_STROKE_WIDTH, 1 / zoom)
-  const strokeTick = Math.max(isPrimary ? 3 : 2, 1.5 / zoom)
-  const strokeExt = Math.max(1, 0.8 / zoom)
+  // Hierarchy: main (overall) > dimension (element size, "how big") > position (gap, "how far")
+  const isPosition = dim.kind === 'gap'
+  const dimColor = isPrimary ? DIMENSION_COLOR_PRIMARY : isPosition ? DIMENSION_COLOR_POSITION : DIMENSION_COLOR_ELEMENT
+  const fontSize = Math.max(isPrimary ? 24 : isPosition ? 15 : 20, 12 / zoom)
+  const tickLen = Math.max(isPosition ? 8 : 12, 6 / zoom)
+  const strokeDim = Math.max(isPrimary ? PRIMARY_DIMENSION_STROKE_WIDTH : isPosition ? 0.6 : 1.2, 1 / zoom)
+  const strokeTick = Math.max(isPrimary ? 3 : isPosition ? 1.2 : 2.2, 1.5 / zoom)
+  const strokeExt = Math.max(isPosition ? 0.6 : 1, 0.8 / zoom)
+  const textWeight = isPrimary ? '700' : isPosition ? '400' : '600'
 
   const tickProps = orientation === 'horizontal'
     ? { dx: 0, dy: tickLen }
     : { dx: tickLen, dy: 0 }
 
   return (
-    <g className="dimension" opacity={isPrimary ? 1 : 0.85}>
+    <g className="dimension" opacity={isPrimary ? 1 : isPosition ? 0.8 : 0.95}>
       <line x1={ext1x1} y1={ext1y1} x2={ext1x2} y2={ext1y2} stroke={dimColor} strokeWidth={strokeExt} strokeDasharray="4 2" opacity={0.5} />
       <line x1={ext2x1} y1={ext2y1} x2={ext2x2} y2={ext2y2} stroke={dimColor} strokeWidth={strokeExt} strokeDasharray="4 2" opacity={0.5} />
 
@@ -171,7 +174,7 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
         fontSize={fontSize}
         fontFamily="Inter, sans-serif"
         fill={dimColor}
-        fontWeight={isPrimary ? "600" : "500"}
+        fontWeight={textWeight}
         style={{ userSelect: 'none' }}
       >
         {label}

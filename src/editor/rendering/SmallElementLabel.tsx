@@ -1,10 +1,30 @@
-import React from 'react'
+import React, { createContext, useContext, useMemo } from 'react'
 import { useEditorStore } from '../../store/editorStore.ts'
-import { getElementReferenceBounds } from '../geometry/segments.ts'
+import {
+  SMALL_ELEMENT_THRESHOLD,
+  MIN_VISUAL_SIZE,
+  HIT_AREA_SIZE,
+  computeCalloutLayouts,
+  getVisualMode,
+  shortLabel,
+  type CalloutLayout,
+} from '../geometry/calloutLayout.ts'
 
-export const SMALL_ELEMENT_THRESHOLD = 48 // px on screen
-export const MIN_VISUAL_SIZE = 14 // px on screen
-export const HIT_AREA_SIZE = 32 // px on screen
+export { SMALL_ELEMENT_THRESHOLD, MIN_VISUAL_SIZE, HIT_AREA_SIZE }
+
+/** Dev-only layout diagnostics. Enable with `?debugLayout` in the URL (dev builds only). */
+export const DEBUG_LAYOUT: boolean =
+  import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugLayout')
+
+/** Layouts are computed once per frame by the Canvas (it knows about the dimensions). */
+export const CalloutLayoutContext = createContext<Map<string, CalloutLayout> | null>(null)
+
+// Callouts are identification only: neutral slate, thin, no arrowheads.
+const CALLOUT_LINE = '#94a3b8'
+const CALLOUT_TITLE = '#475569'
+const CALLOUT_SUB = '#64748b'
+const CALLOUT_ACTIVE = '#0f172a'
+const HIDE_TEXT_BELOW_ZOOM = 0.12
 
 type SmallElementLabelProps = {
   elementId: string
@@ -16,6 +36,8 @@ type SmallElementLabelProps = {
   title: string
   subtitle: string
   color?: string
+  selected?: boolean
+  hovered?: boolean
 }
 
 export const SmallElementLabel: React.FC<SmallElementLabelProps> = ({
@@ -27,104 +49,106 @@ export const SmallElementLabel: React.FC<SmallElementLabelProps> = ({
   zoom,
   title,
   subtitle,
-  color = '#64748b'
+  color = '#64748b',
+  selected = false,
+  hovered = false,
 }) => {
   const store = useEditorStore()
   const elements = store.project.elements
+  const ctxLayouts = useContext(CalloutLayoutContext)
 
   const screenW = worldWidth * zoom
   const screenH = worldHeight * zoom
+  const mode = getVisualMode(screenW, screenH)
+  const active = selected || hovered
+  const px = 1 / zoom
 
-  const isSmall = screenW < SMALL_ELEMENT_THRESHOLD && screenH < SMALL_ELEMENT_THRESHOLD
+  // Fallback when rendered outside the Canvas provider
+  const fallback = useMemo(
+    () => (mode === 'callout' && !ctxLayouts ? computeCalloutLayouts(elements, zoom) : null),
+    [mode, ctxLayouts, elements, zoom],
+  )
 
-  if (!isSmall) {
-    // Normal label
+  if (mode !== 'callout') {
+    const compact = mode === 'compact'
+    const t = compact ? shortLabel(title) : title
     return (
-      <text x={cx} y={cy - 6 / zoom} textAnchor="middle" dominantBaseline="middle"
-        fontSize={14 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b"
+      <text x={cx} y={cy - (compact ? 5 : 6) * px} textAnchor="middle" dominantBaseline="middle"
+        fontSize={(compact ? 11 : 14) * px} fontFamily="Inter, sans-serif" fill="#1e293b"
         style={{ userSelect: 'none', pointerEvents: 'none', fontWeight: 600 }}
-        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill" strokeOpacity={0.8}>
-        {title}
-        <tspan x={cx} dy={16 / zoom} fontWeight="400" fontSize={11 / zoom} fill="#475569">{subtitle}</tspan>
+        stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.8}>
+        {t}
+        <tspan x={cx} dy={(compact ? 13 : 16) * px} fontWeight="400" fontSize={(compact ? 9 : 11) * px} fill="#475569">{subtitle}</tspan>
       </text>
     )
   }
 
-  // Callout representation
-  let dirX = 1 // 1 for right, -1 for left
-  
-  const el = elements.find(e => e.id === elementId)
-  if (el && el.parentId) {
-    const parent = elements.find(p => p.id === el.parentId)
-    if (parent && parent.type === 'countertop') {
-      const refBounds = getElementReferenceBounds(el, parent)
-      const midX = (refBounds.left + refBounds.right) / 2
-      if (cx > midX) {
-        dirX = 1
-      } else {
-        dirX = -1
-      }
-    } else if (parent && parent.type === 'wet-area') {
-      const pw = parent.width ?? 1000
-      if (cx > parent.position.x + pw / 2) {
-        dirX = 1
-      } else {
-        dirX = -1
-      }
-    }
-  }
+  const layout = (ctxLayouts ?? fallback)?.get(elementId)
+  const tooSmall = Math.min(screenW, screenH) < MIN_VISUAL_SIZE
+  const showText = zoom >= HIDE_TEXT_BELOW_ZOOM || active
 
-  // Simple heuristic: stagger vertical position based on other small elements nearby
-  let staggerY = 0
-  const nearbyThreshold = 150 / zoom
-  const smallElements = elements.filter(e => {
-    if (e.id === elementId) return false
-    const ew = (e as any).diameter ?? (e as any).width ?? 100
-    const eh = (e as any).diameter ?? (e as any).depth ?? 100
-    return (ew * zoom < SMALL_ELEMENT_THRESHOLD && eh * zoom < SMALL_ELEMENT_THRESHOLD)
-  })
-  
-  // Count how many small elements are close and above us
-  for (const other of smallElements) {
-    const ox = other.position.x
-    const oy = other.position.y
-    if (Math.abs(ox - cx) < nearbyThreshold) {
-      if (oy < cy && cy - oy < nearbyThreshold) {
-        staggerY += 20 / zoom
-      }
-    }
-  }
-
-  const offsetPx = 60
-  const offsetWorld = (offsetPx / zoom) * dirX
-
-  const lineX1 = cx
-  const lineY1 = cy
-  const lineX2 = cx + offsetWorld
-  const lineY2 = cy + staggerY
-
-  const textX = lineX2 + (dirX > 0 ? 4 / zoom : -4 / zoom)
-  const textY = lineY2
+  const lineColor = selected ? color : hovered ? CALLOUT_TITLE : CALLOUT_LINE
+  const lineW = (selected ? 1.25 : hovered ? 1 : 0.75) * px
 
   return (
     <g className="callout" style={{ pointerEvents: 'none', userSelect: 'none' }}>
-      {/* Draw a polyline instead of line if staggered */}
-      {staggerY === 0 ? (
-        <line x1={lineX1} y1={lineY1} x2={lineX2} y2={lineY2} stroke={color} strokeWidth={1 / zoom} />
-      ) : (
-        <polyline points={`${lineX1},${lineY1} ${lineX1 + offsetWorld * 0.3},${lineY1} ${lineX1 + offsetWorld * 0.7},${lineY2} ${lineX2},${lineY2}`} fill="none" stroke={color} strokeWidth={1 / zoom} />
+      {/* Minimum visual marker – real geometry is untouched */}
+      {tooSmall && (
+        <circle cx={cx} cy={cy} r={(MIN_VISUAL_SIZE / 2) * px} fill="#ffffff" fillOpacity={0.7}
+          stroke={color} strokeWidth={(active ? 1.5 : 1.2) * px} />
       )}
-      
-      <text x={textX} y={textY - 4 / zoom} textAnchor={dirX > 0 ? 'start' : 'end'} dominantBaseline="baseline"
-        fontSize={11 / zoom} fontFamily="Inter, sans-serif" fill="#1e293b" fontWeight="600"
-        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill">
-        {title}
-      </text>
-      <text x={textX} y={textY + 12 / zoom} textAnchor={dirX > 0 ? 'start' : 'end'} dominantBaseline="baseline"
-        fontSize={10 / zoom} fontFamily="Inter, sans-serif" fill="#475569"
-        stroke="#ffffff" strokeWidth={3 / zoom} paintOrder="stroke fill">
-        {subtitle}
-      </text>
+
+      {layout && showText && (
+        <>
+          <polyline
+            points={layout.linePath.map(p => `${p.x},${p.y}`).join(' ')}
+            fill="none" stroke={lineColor} strokeWidth={lineW} strokeLinejoin="round" />
+          <circle cx={layout.start.x} cy={layout.start.y} r={2.2 * px}
+            fill="#ffffff" stroke={lineColor} strokeWidth={lineW} />
+
+          <text x={layout.end.x + (layout.textAnchor === 'start' ? 3 : -3) * px} y={layout.end.y - 2 * px}
+            textAnchor={layout.textAnchor} dominantBaseline="alphabetic"
+            fontSize={10 * px} fontFamily="Inter, sans-serif" fontWeight={active ? 700 : 600}
+            fill={active ? CALLOUT_ACTIVE : CALLOUT_TITLE}
+            stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.85}>
+            {shortLabel(title)}
+          </text>
+          <text x={layout.end.x + (layout.textAnchor === 'start' ? 3 : -3) * px} y={layout.end.y + 9 * px}
+            textAnchor={layout.textAnchor} dominantBaseline="alphabetic"
+            fontSize={9 * px} fontFamily="Inter, sans-serif" fontWeight={400}
+            fill={active ? CALLOUT_TITLE : CALLOUT_SUB}
+            stroke="#ffffff" strokeWidth={3 * px} paintOrder="stroke fill" strokeOpacity={0.85}>
+            {subtitle}
+          </text>
+        </>
+      )}
+    </g>
+  )
+}
+
+/** Development overlay: global bounds, segment bounds, element bounds, anchors, label boxes, leaders. */
+export const CalloutDebugLayer: React.FC<{ layouts: Map<string, CalloutLayout>; zoom: number }> = ({ layouts, zoom }) => {
+  const px = 1 / zoom
+  return (
+    <g className="callout-debug" pointerEvents="none" fill="none" strokeWidth={1 * px}>
+      {[...layouts.values()].map(l => (
+        <g key={l.elementId}>
+          {l.globalBounds && (
+            <rect x={l.globalBounds.x} y={l.globalBounds.y} width={l.globalBounds.width} height={l.globalBounds.height}
+              stroke="#ef4444" strokeDasharray={`${6 * px} ${4 * px}`} />
+          )}
+          {l.segmentBounds && (
+            <rect x={l.segmentBounds.left} y={l.segmentBounds.top}
+              width={l.segmentBounds.right - l.segmentBounds.left} height={l.segmentBounds.bottom - l.segmentBounds.top}
+              stroke="#f97316" />
+          )}
+          <rect x={l.elementBounds.x} y={l.elementBounds.y} width={l.elementBounds.width} height={l.elementBounds.height} stroke="#22c55e" />
+          <rect x={l.labelBox.x} y={l.labelBox.y} width={l.labelBox.width} height={l.labelBox.height}
+            stroke={l.collisions > 0 ? '#ef4444' : '#a855f7'} />
+          <circle cx={l.anchor.x} cy={l.anchor.y} r={2 * px} fill="#d946ef" />
+          <polyline points={l.linePath.map(p => `${p.x},${p.y}`).join(' ')} stroke="#d946ef" />
+        </g>
+      ))}
     </g>
   )
 }

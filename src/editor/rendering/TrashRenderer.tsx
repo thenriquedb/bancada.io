@@ -44,6 +44,8 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
           title="LIXEIRA"
           subtitle={`Ø${element.diameter ?? 250} mm`}
           color={stroke}
+          selected={selected}
+          hovered={hovered}
         />
       </g>
     )
@@ -86,6 +88,8 @@ export const TrashRenderer: React.FC<TrashRendererProps> = ({ element, selected,
         title="LIXEIRA"
         subtitle={`${w} × ${d} mm`}
         color={stroke}
+        selected={selected}
+        hovered={hovered}
       />
     </g>
   )

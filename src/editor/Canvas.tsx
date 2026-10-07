@@ -27,6 +27,8 @@ import { AnnotationRenderer } from './rendering/AnnotationRenderer.tsx'
 import { DimensionRenderer } from './rendering/DimensionRenderer.tsx'
 import { ArrowRenderer } from './rendering/ArrowRenderer.tsx'
 import { generateAutoDimensions } from './geometry/dimensions.ts'
+import { computeCalloutLayouts } from './geometry/calloutLayout.ts'
+import { CalloutLayoutContext, CalloutDebugLayer, DEBUG_LAYOUT } from './rendering/SmallElementLabel.tsx'
 import { generateId } from '../utils/helpers.ts'
 import type { Point, ProjectElement, CountertopElement, WetAreaElement, ValidationWarning } from '../models/types.ts'
 
@@ -714,6 +716,12 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
     })
   }, [elements, settings.showDimensions, unit])
 
+  // ── Callout layouts (segment-aware, collision-aware; see calloutLayout.ts) ──
+  const calloutLayouts = useMemo(
+    () => computeCalloutLayouts(elements, viewport.zoom, autoDimensions),
+    [elements, viewport.zoom, autoDimensions],
+  )
+
   // ── Room bounds ──────────────────────────────────────────────────────────
   const roomBounds = settings.roomBounds
   const showRoom = roomBounds?.show && roomBounds.width > 0 && roomBounds.height > 0
@@ -753,6 +761,7 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
         )}
 
         {/* All elements */}
+        <CalloutLayoutContext.Provider value={calloutLayouts}>
         {elements.map((el: ProjectElement) => {
           const hasError = warnings.some(w => w.type === 'elements-overlapping' && w.elementIds.includes(el.id))
           return (
@@ -767,11 +776,14 @@ export const Canvas: React.FC<CanvasProps> = ({ warnings = [] }) => {
             </g>
           )
         })}
+        </CalloutLayoutContext.Provider>
 
         {/* Auto-dimensions */}
         {autoDimensions.length > 0 && (
           <DimensionRenderer dimensions={autoDimensions} zoom={viewport.zoom} />
         )}
+
+        {DEBUG_LAYOUT && <CalloutDebugLayer layouts={calloutLayouts} zoom={viewport.zoom} />}
 
         {/* Drag Guides */}
         {drag.type === 'moving' && (
@@ -867,7 +879,7 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, selected, ho
     case 'cooktop':
       return <CooktopRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} zoom={zoom} />
     case 'faucet':
-      return <FaucetRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} />
+      return <FaucetRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} zoom={zoom} />
     case 'trash':
       return <TrashRenderer element={element} selected={selected} hovered={hovered} hasError={hasError} zoom={zoom} />
     case 'wet-area':

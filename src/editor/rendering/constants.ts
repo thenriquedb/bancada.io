@@ -15,6 +15,8 @@ export const DIMENSION_LABEL_PADDING = 6;
 export const MIN_LABEL_GAP = 10;
 export const DIMENSION_COLOR_PRIMARY = '#2563eb'; // blue-600
 export const DIMENSION_COLOR_SECONDARY = '#64748b'; // slate-500
+export const DIMENSION_COLOR_ELEMENT = '#2563eb'; // blue-600 – element dimensions ("how big")
+export const DIMENSION_COLOR_POSITION = '#7b93b8'; // soft blue-grey – positioning ("how far")
 
 export const COMPONENT_LABEL_SIZE = 22;
 export const COMPONENT_SELECTION_STROKE_WIDTH = 2;
