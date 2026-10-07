@@ -21,12 +21,10 @@ export const DimensionRenderer: React.FC<DimensionRendererProps> = ({ dimensions
   const visualDims = useMemo(() => {
     const vDims = dimensions.map(d => {
       const isPrimary = d.kind === 'countertop'
-      // Create visual 'bands' by pushing primary dimensions further out
-      const extraOffset = isPrimary ? (d.offset > 0 ? 50 : -50) : 0
       return {
         ...d,
         isPrimary,
-        visualOffset: d.offset + extraOffset,
+        visualOffset: d.offset,
         textNudge: 0
       }
     })

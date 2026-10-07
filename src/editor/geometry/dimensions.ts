@@ -27,9 +27,9 @@ function fmt(mm: number, unit: Unit): string {
 
 // ─── Auto-dimension generator ─────────────────────────────────────────────────
 
-const DIM_OFFSET_PRIMARY = -160   // mm above/left for overall dims
+const DIM_OFFSET_PRIMARY = -140   // mm above/left for overall dims (decreased distance)
 const DIM_OFFSET_WETAREA = -100   // mm for wet area
-const DIM_OFFSET_ELEMENT = -50    // mm for sinks, cooktops
+const DIM_OFFSET_ELEMENT = -35   // mm for sinks, cooktops
 
 /**
  * Generate automatic dimension lines for a countertop and all its children.
@@ -85,7 +85,7 @@ export function generateAutoDimensions(
 
     // ── Overall height ───────────────────────────────────────────────────────
     let xDepth = isLShape ? pos.x : pos.x + pW
-    let offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : 50
+    let offsetDepth = isLShape ? DIM_OFFSET_PRIMARY : Math.abs(DIM_OFFSET_PRIMARY)
     if (parent.dimSelfPosV === 'left') {
       xDepth = pos.x
       offsetDepth = -Math.abs(DIM_OFFSET_PRIMARY)
@@ -156,7 +156,7 @@ export function generateAutoDimensions(
     // Note: visibility filtering is mostly handled by Canvas.tsx before passing children.
     const bounds = getElementBounds(child)
     if (!bounds) return
-    
+
     const refBounds = getElementReferenceBounds(child, parent as any)
 
     // Dynamic offset based on child type for its own width/depth, and parent type for gaps
@@ -179,10 +179,10 @@ export function generateAutoDimensions(
     // overlapping span) instead of the countertop edge. Falls back to the existing bound.
     const neighbours = child.type === 'cutout'
       ? children.filter(o => {
-          if (o.id === child.id || o.type === 'wet-area' || o.type === 'backsplash') return false
-          if (!getElementBounds(o)) return false
-          return getElementReferenceBounds(o, parent as any).segmentId === refBounds.segmentId
-        }).map(o => getElementBounds(o)!)
+        if (o.id === child.id || o.type === 'wet-area' || o.type === 'backsplash') return false
+        if (!getElementBounds(o)) return false
+        return getElementReferenceBounds(o, parent as any).segmentId === refBounds.segmentId
+      }).map(o => getElementBounds(o)!)
       : []
     const overlapY = (o: { y: number; height: number }) => o.y < bounds.y + bounds.height && o.y + o.height > bounds.y
     const overlapX = (o: { x: number; width: number }) => o.x < bounds.x + bounds.width && o.x + o.width > bounds.x

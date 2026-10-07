@@ -22,7 +22,7 @@ export function generatePdfDimensions(ct: CountertopElement, children: ProjectEl
   if (!cb) return dims
 
   // Global offset for primary dimensions
-  const OUTSIDE_OFFSET = 300 // mm
+  const OUTSIDE_OFFSET = 120 // mm
 
   // 1. Countertop Main Dimensions
   if (ct.geometry.type === 'reta') {
