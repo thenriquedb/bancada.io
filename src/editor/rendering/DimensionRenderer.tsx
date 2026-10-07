@@ -156,12 +156,14 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
       <line x1={lx2 - tickProps.dx / 2} y1={ly2 - tickProps.dy / 2} x2={lx2 + tickProps.dx / 2} y2={ly2 + tickProps.dy / 2} stroke={dimColor} strokeWidth={strokeTick} />
 
       <rect
-        x={mx - (label.length * fontSize * 0.28) - 2}
-        y={my - fontSize * 0.5}
-        width={label.length * fontSize * 0.56 + 4}
-        height={fontSize}
-        fill="#ffffff"
-        rx={2}
+        x={mx - (label.length * fontSize * 0.28) - 3}
+        y={my - fontSize * 0.52}
+        width={label.length * fontSize * 0.56 + 6}
+        height={fontSize * 1.04}
+        fill="#FFFFFF"
+        stroke="#BFDBFE"
+        strokeWidth={Math.max(1, 1 / zoom)}
+        rx={3}
       />
 
       <text
@@ -171,7 +173,7 @@ const DimLine: React.FC<DimLineProps> = ({ dim, zoom }) => {
         dy={1}
         fontSize={fontSize}
         fontFamily="Inter, sans-serif"
-        fill={dimColor}
+        fill="#1D4ED8"
         fontWeight={textWeight}
         style={{ userSelect: 'none' }}
       >
